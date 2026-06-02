@@ -66,18 +66,30 @@ packages/
             src/panels/      Connection, Live, Dtc, Probe, Terminal
 ```
 
-## Run / verify commands
+## Run / verify commands (YOU run these — the user never uses the terminal)
 
-```powershell
-npm install                          # after a clone
-npm run build                        # build all three packages
-npm start                            # production: bridge serves UI+WS on :8080
-npm run dev:server ; npm run dev:web # dev (two terminals), UI on :5173
-$env:MOCK="1"                        # prefix any of the above to use the simulated Prado
-npm run capture                      # at-the-car offline diagnostic (interactive)
-npm run capture:mock                 # rehearse capture against the mock
-node packages/server/smoke-test.mjs  # WS end-to-end smoke test (server must be running, mock ok)
+The primary target machine is a **Chromebook (ChromeOS) running Linux via
+Crostini** — a Debian container. Use bash, not PowerShell. See
+`docs/CHROMEBOOK.md` for the container/networking specifics.
+
+```bash
+npm install                            # after a clone
+npm run build                          # build all three packages
+npm run watch                          # AUTO-CAPTURE WATCHER — the main at-the-car
+                                       #   tool. Start it BEFORE the user goes to the
+                                       #   car / offline. Run in the background.
+npm run watch:mock                     # rehearse the watcher (captures once, exits)
+npm run capture                        # one-shot INTERACTIVE capture (keyboard prompts)
+npm run capture:mock                   # rehearse interactive capture
+npm start                              # production: bridge serves UI+WS on :8080
+npm run dev:server & npm run dev:web   # dev (UI :5173) — see CHROMEBOOK.md for the
+                                       #   ChromeOS port-forwarding caveat
+MOCK=1 <any of the above>              # simulated Prado
+node packages/server/smoke-test.mjs    # WS end-to-end smoke test
 ```
+
+The user mostly works in "Claude mechanic chat" mode and rarely opens the browser
+UI; the watcher + capture files are the main path. The browser UI is optional.
 
 ## Known gotchas (already handled — don't regress)
 

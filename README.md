@@ -9,6 +9,7 @@ It is built as an extensible **OBD platform**, not a one-off ELM327 app: the ada
 | If you want to… | Read |
 | --- | --- |
 | Set up on a new machine (the laptop) | [`docs/SETUP-NEW-MACHINE.md`](docs/SETUP-NEW-MACHINE.md) |
+| Run on a **Chromebook** (ChromeOS/Crostini) | [`docs/CHROMEBOOK.md`](docs/CHROMEBOOK.md) |
 | Connect to the car (OBD port, WiFi, run a session) | [`docs/AT-THE-CAR.md`](docs/AT-THE-CAR.md) |
 | Understand the "Claude as mechanic" workflow | [`docs/CONSULTANCY-WORKFLOW.md`](docs/CONSULTANCY-WORKFLOW.md) |
 

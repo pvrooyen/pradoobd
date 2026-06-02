@@ -43,66 +43,59 @@ home network). On the laptop:
 > while you're connected to it. That's the whole reason for the offline capture
 > workflow below.
 
-## 4. Two ways to run a session
+## 4. How a session runs (you don't touch the terminal)
 
-### Option A (recommended) — offline capture, then discuss
+The intended mode: **Claude runs everything; you only talk, plug in, and rev.**
+Because the adapter's WiFi has no internet (Claude can't reach the laptop while
+you're on it), Claude starts the **auto-capture watcher** *before* you go offline.
 
-Best when you want Claude to be the mechanic. One command does a full diagnostic
-sweep and writes a file; you then reconnect to the internet and paste it.
+### The flow (Option A — recommended, hands-free)
 
-```powershell
-# laptop joined to adapter WiFi, ignition ON / engine running
-npm run capture
+1. **Before you leave / go offline:** Claude starts the watcher in the background:
+   ```bash
+   npm run watch        # polls for the adapter; no adapter needed to start
+   ```
+2. **At the car:** plug in the ELM327, ignition ON (engine running for live data),
+   join the adapter's WiFi. **You run nothing.**
+3. The watcher auto-detects the adapter and runs a full capture by itself. Partway
+   through it prints **`>>> REV TO ~2500 RPM AND HOLD NOW <<<`** — rev when you see
+   it (or just rev for ~10 s around then). It writes
+   `captures/prado-capture-<timestamp>.json` + `.md`.
+4. **Switch the laptop back to normal internet** and tell Claude "done."
+5. Claude reads the newest `captures/*.md` directly and you discuss findings.
+
+Each time the adapter reconnects (unplug/replug, or a later visit), the watcher
+captures again automatically. Claude can change capture parameters (e.g. a wider
+Mode 22 range) by restarting the watcher with env vars — that's Claude's job:
+
+```bash
+ELM_HOST=192.168.0.10 ELM_PORT=35000 \
+MODE22_START=0x0000 MODE22_END=0x05FF \
+SNAPSHOTS=8 SNAPSHOT_GAP_MS=5000 \
+npm run watch
 ```
 
-It will:
-1. Initialize the adapter, read VIN, scan supported PIDs.
-2. Prompt you: **"engine at idle, press Enter"** → captures an idle snapshot.
-3. Prompt you: **"rev to ~2500 rpm and hold, press Enter"** → captures under load.
-4. Read DTCs (stored + pending).
-5. Sweep the Toyota Mode 22 prober range.
-6. Write `captures/prado-capture-<timestamp>.json` **and** `.md`.
+> One-shot interactive alternative (`npm run capture`) exists for when someone is
+> at the keyboard and wants press-Enter control, but the watcher is the default.
 
-Then:
-1. Disconnect from the adapter WiFi, **reconnect to normal internet**.
-2. Open the `.md` file, **paste its contents into the chat** (or attach the
-   `.json`). Claude reads the raw bytes and you discuss findings + next steps.
+### Option B — live dashboard (optional, if you want to watch gauges)
 
-Run `npm run capture` again any time Claude asks for fresh data (e.g. "probe a
-wider Mode 22 range" or "capture while cold"). Set env vars to tweak:
-
-```powershell
-$env:ELM_HOST="192.168.0.10"   # adapter IP if different
-$env:ELM_PORT="35000"          # adapter port if different
-$env:CAPTURE_DIR="D:\obd-logs" # write captures elsewhere
-$env:NONINTERACTIVE="1"        # skip the idle/rev prompts (unattended)
-npm run capture
-```
-
-### Option B — live interactive dashboard
-
-When you want to watch gauges move yourself in real time (no internet needed for
-this; it's all local):
-
-```powershell
+```bash
 npm run build      # first time only
-npm start          # bridge serves UI + connects to adapter, on :8080
-# open http://localhost:8080 in Chrome
+npm start          # bridge + UI on :8080
+# open http://localhost:8080 in Chrome (auto-forwarded from Crostini; see CHROMEBOOK.md)
 ```
 
-Connection tab → Connect → Live Data → Scan → Start live.
-
-> Dev mode (`npm run dev:server` + `npm run dev:web`, UI on :5173) also works at
-> the car, but Option B's single `npm start` on :8080 is simpler trackside.
+Connection tab → Connect → Live Data → Scan → Start live. No internet needed —
+it's all local on the laptop.
 
 ## 5. Rehearse without the car
 
 Everything above can be practised on the simulated Prado first:
 
-```powershell
-npm run capture:mock                 # offline-capture rehearsal
-# or
-$env:MOCK="1"; npm start             # live dashboard against the mock
+```bash
+npm run watch:mock        # watcher rehearsal — captures once and exits
+MOCK=1 npm start          # live dashboard against the mock (UI on :8080)
 ```
 
 ## Safety notes

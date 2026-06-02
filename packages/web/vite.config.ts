@@ -9,6 +9,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    // Bind 0.0.0.0 so ChromeOS/Crostini auto-forwards :5173 to the Chrome
+    // browser (it only tunnels ports bound to all interfaces). Harmless elsewhere.
+    host: true,
     proxy: {
       '/ws': {
         target: 'ws://localhost:8080',

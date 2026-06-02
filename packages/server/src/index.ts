@@ -109,8 +109,13 @@ wss.on('connection', (ws: WebSocket) => {
   ws.on('error', (err) => log.warn('ws error', err.message));
 });
 
-server.listen(PORT, () => {
-  log.info(`bridge server on http://localhost:${PORT}  (mock=${USE_MOCK})`);
+// Bind 0.0.0.0 (all interfaces), not 127.0.0.1. On ChromeOS/Crostini this is
+// required for ChromeOS's automatic localhost port-forwarding (cicerone/chunnel)
+// to tunnel the port from the Linux container to the Chrome browser. Port must
+// be >= 1024 (8080 is fine). On Windows/macOS this is equally valid.
+const HOST_BIND = process.env.HOST_BIND || '0.0.0.0';
+server.listen(PORT, HOST_BIND, () => {
+  log.info(`bridge server on http://localhost:${PORT}  (bind=${HOST_BIND}, mock=${USE_MOCK})`);
   log.info(`websocket at ws://localhost:${PORT}/ws`);
   if (!fs.existsSync(WEB_DIST)) {
     log.warn('web UI not built. For dev, run the Vite dev server (npm run dev:web) on :5173.');
