@@ -1,0 +1,27 @@
+{
+  "name": "pradoobd",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bespoke web-based OBD2 diagnostic tool for a 2005 Toyota Prado (1KD-FTV diesel), bridging an ELM327 WiFi adapter to a React browser UI.",
+  "type": "module",
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/web"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspace @pradoobd/shared",
+    "dev:server": "npm run dev --workspace @pradoobd/server",
+    "dev:web": "npm run dev --workspace @pradoobd/web",
+    "dev": "npm run build:shared && concurrently -n server,web -c blue,magenta \"npm run dev:server\" \"npm run dev:web\"",
+    "build": "npm run build:shared && npm run build --workspace @pradoobd/server && npm run build --workspace @pradoobd/web",
+    "start": "npm run start --workspace @pradoobd/server",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
