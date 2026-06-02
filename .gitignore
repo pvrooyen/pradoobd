@@ -10,8 +10,10 @@ logs/
 *.log
 npm-debug.log*
 
-# Captured OBD session logs (raw adapter traffic) — keep these local
-captures/
+# Captured OBD session logs (may contain your VIN) — keep the files local but
+# preserve the folder via captures/.gitkeep.
+captures/*
+!captures/.gitkeep
 *.obdlog
 
 # Editor / OS
@@ -21,6 +23,8 @@ captures/
 .DS_Store
 Thumbs.db
 
-# Env
-.env
+# Env — ignore local/secret env files, but DO track the committed dev defaults
+# in packages/web/.env (no secrets there; it just points the UI at the bridge).
 .env.local
+.env.*.local
+!.env

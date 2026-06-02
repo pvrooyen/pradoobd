@@ -4,6 +4,19 @@ A bespoke, web-based OBD-II diagnostic tool for a **2005 Toyota Land Cruiser Pra
 
 It is built as an extensible **OBD platform**, not a one-off ELM327 app: the adapter sits behind a `Transport` interface, so a future J2534 / DoIP / UDS-coding device can be added without touching the UI, protocol logic, or decoders.
 
+## 📖 Start here
+
+| If you want to… | Read |
+| --- | --- |
+| Set up on a new machine (the laptop) | [`docs/SETUP-NEW-MACHINE.md`](docs/SETUP-NEW-MACHINE.md) |
+| Connect to the car (OBD port, WiFi, run a session) | [`docs/AT-THE-CAR.md`](docs/AT-THE-CAR.md) |
+| Understand the "Claude as mechanic" workflow | [`docs/CONSULTANCY-WORKFLOW.md`](docs/CONSULTANCY-WORKFLOW.md) |
+
+**TL;DR consultancy loop:** at the car, on the adapter's (no-internet) WiFi, run
+`npm run capture` → it does a full diagnostic and writes `captures/prado-*.md` →
+reconnect to internet → paste that file into the chat → we discuss. The capture
+is the bridge across the connectivity gap.
+
 ---
 
 ## Why there's a backend (the one architectural fact to know)

@@ -41,7 +41,21 @@ export interface LiveSeries {
 const HISTORY_CAP = 120;
 
 function wsUrl(): string {
+  // Explicit override always wins (set VITE_WS_URL in an .env file if needed).
+  const override = import.meta.env.VITE_WS_URL as string | undefined;
+  if (override) return override;
+
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  // In `vite dev` the UI is served from :5173 but the bridge listens on :8080.
+  // Connecting straight to the bridge avoids relying on Vite's WebSocket proxy,
+  // which can be flaky on Windows (localhost IPv6/IPv4 + upgrade handshake). In
+  // a production build (DEV === false) the bridge serves the UI itself, so
+  // same-origin is correct.
+  if (import.meta.env.DEV) {
+    const bridgePort = (import.meta.env.VITE_BRIDGE_PORT as string | undefined) ?? '8080';
+    return `${proto}//${location.hostname}:${bridgePort}/ws`;
+  }
   return `${proto}//${location.host}/ws`;
 }
 
@@ -106,16 +120,34 @@ export function useObd(): ObdApi {
     let retry: ReturnType<typeof setTimeout> | null = null;
 
     const open = () => {
+      if (closed) return;
       const ws = new WebSocket(wsUrl());
       wsRef.current = ws;
 
-      ws.onopen = () => pushTerminal({ dir: 'sys', text: 'WS connected to bridge' });
-      ws.onclose = () => {
-        pushTerminal({ dir: 'sys', text: 'WS disconnected from bridge' });
-        if (!closed) retry = setTimeout(open, 1500);
+      ws.onopen = () => {
+        if (closed) {
+          // The effect was torn down while we were still connecting (common in
+          // React 18 StrictMode's double-mount). Now that the socket is OPEN we
+          // can close it cleanly without the "closed before established" error.
+          ws.close();
+          return;
+        }
+        setLastError(undefined);
+        pushTerminal({ dir: 'sys', text: 'WS connected to bridge' });
       };
-      ws.onerror = () => setLastError('WebSocket error');
+      ws.onclose = () => {
+        if (closed) return; // deliberate teardown — no reconnect, no noise
+        pushTerminal({ dir: 'sys', text: 'WS disconnected from bridge — retrying…' });
+        retry = setTimeout(open, 1500);
+      };
+      ws.onerror = () => {
+        // A socket aborted by our own teardown fires onerror; ignore it. Only a
+        // live socket's error is worth surfacing.
+        if (closed) return;
+        setLastError('WebSocket error — is the bridge server running on :8080?');
+      };
       ws.onmessage = (ev) => {
+        if (closed) return;
         let evt: ServerEvent;
         try {
           evt = JSON.parse(ev.data as string) as ServerEvent;
@@ -190,7 +222,12 @@ export function useObd(): ObdApi {
     return () => {
       closed = true;
       if (retry) clearTimeout(retry);
-      wsRef.current?.close();
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+      // If still CONNECTING, the onopen handler above closes it once ready —
+      // calling close() on a CONNECTING socket is what throws the console error.
     };
   }, [pushTerminal]);
 

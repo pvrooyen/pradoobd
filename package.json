@@ -16,6 +16,8 @@
     "dev": "npm run build:shared && concurrently -n server,web -c blue,magenta \"npm run dev:server\" \"npm run dev:web\"",
     "build": "npm run build:shared && npm run build --workspace @pradoobd/server && npm run build --workspace @pradoobd/web",
     "start": "npm run start --workspace @pradoobd/server",
+    "capture": "npm run build:shared && npm run capture --workspace @pradoobd/server",
+    "capture:mock": "npm run build:shared && npm run capture:mock --workspace @pradoobd/server",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {

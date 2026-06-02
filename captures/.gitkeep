@@ -1,0 +1,3 @@
+# Diagnostic captures are written here by `npm run capture`.
+# The capture .json/.md files themselves are gitignored (they may contain your
+# VIN); this .gitkeep just preserves the folder in a fresh clone.
