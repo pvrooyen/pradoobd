@@ -101,6 +101,46 @@ export class ObdSession {
   }
 
   /**
+   * Force-try a list of ELM327 protocol numbers, returning the first that gets a
+   * valid answer to Mode 01 PID 00 (`0100` → positive response `41 00 ...`).
+   *
+   * ATSP0 (auto) frequently fails to lock a protocol on older K-line Toyotas
+   * (this 2005 1KD-FTV included): the adapter talks to us but never to the ECU,
+   * so `0100` returns nothing and the protocol stays "AUTO". Forcing each
+   * candidate explicitly is far more reliable. Every attempt's raw response is
+   * returned AND logged, so a total miss is still fully diagnostic.
+   *
+   * ELM327 protocol numbers: 3=ISO 9141-2, 4=ISO 14230-4 KWP (5-baud),
+   * 5=ISO 14230-4 KWP (fast), 6=ISO 15765-4 CAN 11/500, 7=CAN 29/500.
+   */
+  async tryProtocols(
+    candidates: number[],
+    timeoutMs = 9000,
+  ): Promise<{ protocol: number; atdp: string; attempts: Array<{ n: number; resp: string; ok: boolean }> }> {
+    const attempts: Array<{ n: number; resp: string; ok: boolean }> = [];
+    for (const n of candidates) {
+      await this.safeSend(`ATSP${n}`);
+      let resp: string;
+      try {
+        resp = (await this.transport.send('0100', { timeoutMs })).trim();
+      } catch (err) {
+        resp = `ERROR: ${(err as Error).message}`;
+      }
+      // A real reply contains the positive-response bytes 41 00 once we strip
+      // spaces/CR and any echoed header. "NO DATA" / "UNABLE TO CONNECT" / "?"
+      // / "BUS INIT: ERROR" never do.
+      const ok = resp.replace(/[^0-9a-fA-F]/g, '').toUpperCase().includes('4100');
+      attempts.push({ n, resp, ok });
+      log.info(`protocol ATSP${n} 0100 -> ${JSON.stringify(resp)} ${ok ? '✔ ANSWERED' : '✗'}`);
+      if (ok) {
+        const atdp = (await this.safeSend('ATDP')) || `SP${n}`;
+        return { protocol: n, atdp, attempts };
+      }
+    }
+    return { protocol: 0, atdp: '', attempts };
+  }
+
+  /**
    * Discover supported Mode 01 PIDs by walking the bitmask PIDs (00,20,40,60).
    * Each returns 4 bytes; bit set => that PID is supported. Bit 0 of the last
    * byte (the "next" flag) indicates whether the following bank exists.

@@ -65,6 +65,13 @@ const SNAPSHOTS = Number(process.env.SNAPSHOTS) || 6;
 const SNAPSHOT_GAP_MS = Number(process.env.SNAPSHOT_GAP_MS) || 5000;
 const M22_START = parseIntFlexible(process.env.MODE22_START, TOYOTA_PROBE_RANGE.start);
 const M22_END = parseIntFlexible(process.env.MODE22_END, TOYOTA_PROBE_RANGE.end);
+// ELM327 protocols to force-try when auto-detect fails to lock (see tryProtocols).
+// Order = likelihood/speed for this 2005 1KD-FTV: CAN 11/500, KWP fast, KWP
+// 5-baud, ISO 9141-2, CAN 29/500. Override with PROTOCOLS="5,4,3" once known.
+const PROTOCOL_CANDIDATES = (process.env.PROTOCOLS || '6,5,4,3,7')
+  .split(',')
+  .map((s) => parseInt(s.trim(), 10))
+  .filter((n) => !Number.isNaN(n));
 
 function parseIntFlexible(v: string | undefined, dflt: number): number {
   if (!v) return dflt;
@@ -98,7 +105,13 @@ function adapterReachable(): Promise<boolean> {
     const sock = new net.Socket();
     const done = (ok: boolean) => {
       sock.removeAllListeners();
-      sock.destroy();
+      // On success, close the probe socket with a graceful FIN (end) rather than
+      // an abrupt destroy(): these single-client ELM327 WiFi clones leave their
+      // one slot half-open after an RST, which makes the very next (capture)
+      // connection get reset on its first command. A clean FIN lets the adapter
+      // free the slot before we reconnect.
+      if (ok) sock.end();
+      else sock.destroy();
       resolve(ok);
     };
     sock.setTimeout(2000);
@@ -129,15 +142,49 @@ async function runCapture(stamp: string): Promise<void> {
 
   const transport: Transport = USE_MOCK
     ? new MockTransport()
-    : new ElmWifiTransport({ host: HOST, port: PORT, commandTimeoutMs: DEFAULT_ADAPTER_CONFIG.commandTimeoutMs });
+    // CMD_TIMEOUT_MS override: the first real OBD request on a K-line car (ISO
+    // 9141-2 / ISO 14230-4, as on this 2005 1KD-FTV) triggers a slow protocol
+    // search; 4 s is often too tight. Default higher here, overridable per run.
+    : new ElmWifiTransport({ host: HOST, port: PORT, commandTimeoutMs: Number(process.env.CMD_TIMEOUT_MS) || DEFAULT_ADAPTER_CONFIG.commandTimeoutMs });
 
+  // Always release the adapter's single client slot, even if the capture throws
+  // partway through — otherwise a half-open socket lingers and blocks every
+  // subsequent connection (the ELM327 clone accepts only one client at a time).
+  try {
   await transport.open();
   const session = new ObdSession(transport);
 
   log.info('● adapter present — starting automatic capture');
   const init = await session.initialize(DEFAULT_ADAPTER_CONFIG.protocol);
   log.info(`  adapter=${init.adapterId} protocol=${init.protocol}`);
-  const vin = await session.readVin();
+
+  // If auto-detect (ATSP0) didn't lock a real protocol — i.e. ATDP still says
+  // AUTO/unknown — the ELM327 isn't actually talking to the ECU. Common on this
+  // older K-line Toyota. Force-try candidate protocols until 0100 answers.
+  const protocolLocked = /iso|can|j1850|kwp|9141|14230|15765/i.test(init.protocol);
+  if (!protocolLocked) {
+    const voltage = await session.raw('ATRV').catch(() => 'n/a');
+    log.info(`  protocol not locked (ATDP=${init.protocol}); OBD-port voltage ATRV=${voltage}`);
+    log.info(`  forcing protocol — trying ATSP ${PROTOCOL_CANDIDATES.join(',')}`);
+    const det = await session.tryProtocols(PROTOCOL_CANDIDATES);
+    if (det.protocol === 0) {
+      throw new Error(
+        `no OBD protocol answered 0100 (tried ${PROTOCOL_CANDIDATES.join(',')}). ` +
+          `ATRV=${voltage}. Likely: ignition not in RUN / engine not running, or wrong protocol set. ` +
+          `Raw attempts: ${det.attempts.map((a) => `SP${a.n}:${a.resp}`).join(' | ')}`,
+      );
+    }
+    log.info(`  ✔ locked protocol ATSP${det.protocol} (${det.atdp})`);
+  }
+
+  // VIN (Mode 09 PID 02) is best-effort: many non-US / older diesels (incl. this
+  // 1KD-FTV) don't answer it, and a timeout here must NOT abort the whole capture.
+  let vin: string | undefined;
+  try {
+    vin = await session.readVin();
+  } catch (err) {
+    log.warn(`  VIN read skipped (${(err as Error).message})`);
+  }
   const supportedDefs = await session.scanSupportedMode01();
   const supportedIds = new Set(supportedDefs.map((d) => d.id));
   log.info(`  ${supportedDefs.filter((d) => !d.isSupportBitmask).length} data PIDs supported`);
@@ -180,8 +227,10 @@ async function runCapture(stamp: string): Promise<void> {
   const base = path.join(dir, `prado-capture-${stamp}`);
   fs.writeFileSync(`${base}.json`, JSON.stringify(capture, null, 2));
   fs.writeFileSync(`${base}.md`, renderMarkdown(capture));
-  await transport.close();
   log.info(`✔ capture written: ${base}.md  (reconnect to internet; Claude will read it)`);
+  } finally {
+    await transport.close();
+  }
 }
 
 function renderMarkdown(c: {
@@ -216,11 +265,21 @@ function renderMarkdown(c: {
 
 let captureCount = 0;
 
+// Gap between the reachability probe socket closing and the capture socket
+// opening, so the single-client adapter can free its slot between the two.
+const SETTLE_MS = 1000;
+// After a failed capture, back off this long before retrying. A reset usually
+// means the adapter's one socket slot is jammed (e.g. an abrupt WiFi switch left
+// it half-open); it needs ~tens of seconds to time out. Hammering every POLL_MS
+// just keeps it jammed.
+const FAIL_BACKOFF_MS = Number(process.env.FAIL_BACKOFF_MS) || 20000;
+
 async function tick(state: { phase: 'waiting' | 'present' | 'captured' }): Promise<void> {
   const reachable = await adapterReachable();
 
   if (state.phase === 'waiting' && reachable) {
     state.phase = 'present';
+    await sleep(SETTLE_MS);
     const stamp = isoStamp();
     try {
       await runCapture(stamp);
@@ -228,7 +287,9 @@ async function tick(state: { phase: 'waiting' | 'present' | 'captured' }): Promi
       state.phase = 'captured';
     } catch (err) {
       log.error('capture failed:', (err as Error).message);
+      log.info(`  backing off ${Math.round(FAIL_BACKOFF_MS / 1000)}s to let the adapter recover…`);
       state.phase = 'waiting'; // re-arm; maybe a transient connect blip
+      await sleep(FAIL_BACKOFF_MS);
     }
   } else if (state.phase === 'captured' && !reachable) {
     // Adapter went away — re-arm so a replug / next connection captures again.
