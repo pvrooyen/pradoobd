@@ -112,26 +112,70 @@ export class ObdSession {
    *
    * ELM327 protocol numbers: 3=ISO 9141-2, 4=ISO 14230-4 KWP (5-baud),
    * 5=ISO 14230-4 KWP (fast), 6=ISO 15765-4 CAN 11/500, 7=CAN 29/500.
+   *
+   * K-line robustness: cheap WiFi ELM327 clones are notoriously bad at the
+   * ISO 9141 / KWP wake-up handshake — a `BUS INIT: ERROR` from the auto path
+   * is as often the clone as it is a silent ECU. So for K-line protocols (3,4,5)
+   * we tune the init to be deterministic and forgiving, run an explicit manual
+   * init (so the raw sync/keyword bytes are visible in the log), and retry a few
+   * times (clones routinely fail the first init and succeed the second). Each
+   * step is logged raw, so a total miss is still fully diagnostic: zero K-line
+   * sync across every retry points at "no generic-OBD ECU on the K-line"; a
+   * partial/erratic sync points at "marginal clone".
    */
   async tryProtocols(
     candidates: number[],
     timeoutMs = 9000,
+    klineRetries = 2,
   ): Promise<{ protocol: number; atdp: string; attempts: Array<{ n: number; resp: string; ok: boolean }> }> {
     const attempts: Array<{ n: number; resp: string; ok: boolean }> = [];
     for (const n of candidates) {
+      const isKline = n >= 3 && n <= 5; // 3=ISO9141, 4=KWP 5-baud, 5=KWP fast
+      // Close any previously-negotiated protocol so each init starts clean.
+      await this.safeSend('ATPC');
       await this.safeSend(`ATSP${n}`);
-      let resp: string;
-      try {
-        resp = (await this.transport.send('0100', { timeoutMs })).trim();
-      } catch (err) {
-        resp = `ERROR: ${(err as Error).message}`;
+
+      if (isKline) {
+        await this.safeSend('ATAT0'); // adaptive timing off — deterministic
+        await this.safeSend('ATSTFF'); // max per-message timeout (~1020ms)
+        await this.safeSend('ATKW0'); // don't abort init on odd keyword bytes
+        await this.safeSend('ATIB10'); // ISO baud 10400 (explicit)
       }
-      // A real reply contains the positive-response bytes 41 00 once we strip
-      // spaces/CR and any echoed header. "NO DATA" / "UNABLE TO CONNECT" / "?"
-      // / "BUS INIT: ERROR" never do.
-      const ok = resp.replace(/[^0-9a-fA-F]/g, '').toUpperCase().includes('4100');
+
+      const maxAttempts = isKline ? Math.max(1, klineRetries) : 1;
+      let resp = '';
+      let ok = false;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (isKline) {
+          // Manual init isolates the handshake from the request, so the raw
+          // result (real sync/keyword bytes vs BUS INIT: ERROR) shows up in the
+          // log. 5=fast init (ATFI), 3/4=slow 5-baud init (ATSI).
+          const initCmd = n === 5 ? 'ATFI' : 'ATSI';
+          const initResp = await this.safeSend(initCmd);
+          log.info(
+            `protocol ATSP${n} ${initCmd} (init ${attempt}/${maxAttempts}) -> ${JSON.stringify(initResp)}`,
+          );
+        }
+        try {
+          resp = (await this.transport.send('0100', { timeoutMs })).trim();
+        } catch (err) {
+          resp = `ERROR: ${(err as Error).message}`;
+        }
+        // A real reply contains the positive-response bytes 41 00 once we strip
+        // spaces/CR and any echoed header. "NO DATA" / "UNABLE TO CONNECT" / "?"
+        // / "BUS INIT: ERROR" never do.
+        ok = resp.replace(/[^0-9a-fA-F]/g, '').toUpperCase().includes('4100');
+        log.info(
+          `protocol ATSP${n} 0100 (try ${attempt}/${maxAttempts}) -> ${JSON.stringify(resp)} ${ok ? '✔ ANSWERED' : '✗'}`,
+        );
+        if (ok) break;
+        if (attempt < maxAttempts) {
+          await this.safeSend('ATPC'); // close before re-initialising
+          await delay(350);
+        }
+      }
+
       attempts.push({ n, resp, ok });
-      log.info(`protocol ATSP${n} 0100 -> ${JSON.stringify(resp)} ${ok ? '✔ ANSWERED' : '✗'}`);
       if (ok) {
         const atdp = (await this.safeSend('ATDP')) || `SP${n}`;
         return { protocol: n, atdp, attempts };
@@ -275,4 +319,8 @@ export const ALL_DEFINITIONS: PidDefinition[] = [...STANDARD_PIDS, ...TOYOTA_ENH
 
 function hx(n: number): string {
   return (n & 0xff).toString(16).toUpperCase().padStart(2, '0');
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -5,6 +5,48 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-06-04 — verdict: the WiFi clone can't do K-line; comms blocker is the adapter
+
+**Goal:** more captures (Elvera at the laptop, Pierre driving so the engine ran); then
+shopping research for an adapter that gets the most comprehensive data; ship the code.
+
+**Outcome:** Still **0 usable data**, but the cause is now nailed down. Three runs, engine
+confirmed running (`ATRV=13.9V`/`13.8V` on clean reads), all identical:
+`ATSP5/4/3` (KWP fast, KWP 5-baud, ISO 9141-2) → **`BUS INIT: ERROR`**; `ATSP6/7` (CAN) →
+**`NO DATA`**. Adding a manual init exposed the smoking gun: the adapter **rejects `ATSI`
+and `ATFI` with `"?"`** — this cheap ELM327 v1.5 WiFi clone doesn't implement manual init
+and can't establish the K-line. `ATRV` also garbles to `"AUTO"` under load (framing
+desync). **Conclusion: it's the adapter, not the car state or our software.** The engine
+ECU is on K-line (ISO 9141-2 / ISO 14230 KWP); the clone simply can't init it.
+
+**Research verdict (what actually gets comprehensive data on this car):** generic OBD on a
+2005 1KD-FTV diesel is minimal — even a perfect adapter gives at most generic DTCs + a few
+engine PIDs, and **nothing** from A/C, ABS, or SRS, and no active tests. The aircon goal is
+**not reachable via generic OBD**. Real path = **Toyota Techstream + a Mini-VCI J2534 cable
+(~$20, genuine FTDI) on a Windows laptop** (all ECUs, live data, freeze frames, active
+tests). Lighter options: **OBDLink SX (USB, STN1110, ~$30)** to make OUR app log generic
+engine data reliably; **Tactrix OpenPort 2.0** for J2534 + future app integration.
+
+**Code changes this session (`packages/server/src`):**
+- `ObdSession.tryProtocols()` — for K-line protocols now closes the bus (`ATPC`), sets
+  `ATAT0`/`ATSTFF`/`ATKW0`/`ATIB10`, runs an explicit manual init (`ATFI`/`ATSI`) with raw
+  logging, and retries (`KLINE_RETRIES`, default 2). CAN path unchanged.
+- `transport/SerialTransport.ts` (NEW) — USB ELM/STN transport over `serialport` (dynamic,
+  optionalDependency), mirroring the WiFi framing/queue. For the recommended USB adapter.
+- `watch.ts` — `TRANSPORT=auto|wifi|serial` (default auto): uses a plugged-in USB adapter
+  if a device node exists (`/dev/ttyUSB*`,`ACM*`), else WiFi. New env `ELM_SERIAL_PATH`,
+  `ELM_BAUD` (default 115200; genuine ELM USB often 38400). Default protocol order is now
+  K-line-first `5,4,3,6,7`.
+
+**Next session (resume fast):**
+1. **Get a real adapter first** — re-running the China WiFi clone will fail identically.
+2. OBDLink SX (USB): attach it to Linux in ChromeOS so `/dev/ttyUSB0` appears, engine
+   running, then `npm run watch` (auto-detects serial). Plug-and-go, Claude stays online.
+3. For the **aircon / all-ECU** diagnosis: Mini-VCI + Techstream on a Windows laptop —
+   Health Check (all-ECU DTC scan), then A/C ECU Data List + Active Test.
+
+---
+
 ## 2026-06-03 — first real at-the-car attempts; ECU comms not established yet
 
 **Goal:** first live captures; toward the end, diagnose the air-conditioning.

@@ -30,11 +30,18 @@
  * the capture files that appeared.
  *
  * Env:
- *   ELM_HOST / ELM_PORT   adapter address (default 192.168.0.10:35000)
+ *   TRANSPORT             auto (default) | wifi | serial. 'auto' uses a plugged-in
+ *                         USB adapter if present, else the WiFi adapter.
+ *   ELM_SERIAL_PATH       USB serial device (default: first of /dev/ttyUSB*,ACM*)
+ *   ELM_BAUD              USB baud (default 115200 = OBDLink SX; genuine ELM ~38400)
+ *   ELM_HOST / ELM_PORT   WiFi adapter address (default 192.168.0.10:35000)
  *   MOCK=1                rehearse against the simulated Prado
  *   POLL_MS               adapter poll interval (default 3000)
  *   SNAPSHOTS             how many timed snapshots per capture (default 6)
  *   SNAPSHOT_GAP_MS       gap between snapshots (default 5000)
+ *   PROTOCOLS             K-line-first force-try order (default 5,4,3,6,7)
+ *   KLINE_RETRIES         K-line init retries per protocol (default 2)
+ *   CMD_TIMEOUT_MS        per-command timeout (default from shared config)
  *   CAPTURE_DIR           where to write (default <repo-root>/captures)
  *   MODE22_START/END      Mode 22 sweep range (hex or dec; default 0x100-0x1FF)
  */
@@ -51,6 +58,7 @@ import {
 } from '@pradoobd/shared';
 import { ObdSession } from './protocol/ObdSession.js';
 import { ElmWifiTransport } from './transport/ElmWifiTransport.js';
+import { SerialTransport } from './transport/SerialTransport.js';
 import { MockTransport } from './transport/MockTransport.js';
 import type { Transport } from './transport/Transport.js';
 import { createLogger } from './util/logger.js';
@@ -66,12 +74,44 @@ const SNAPSHOT_GAP_MS = Number(process.env.SNAPSHOT_GAP_MS) || 5000;
 const M22_START = parseIntFlexible(process.env.MODE22_START, TOYOTA_PROBE_RANGE.start);
 const M22_END = parseIntFlexible(process.env.MODE22_END, TOYOTA_PROBE_RANGE.end);
 // ELM327 protocols to force-try when auto-detect fails to lock (see tryProtocols).
-// Order = likelihood/speed for this 2005 1KD-FTV: CAN 11/500, KWP fast, KWP
-// 5-baud, ISO 9141-2, CAN 29/500. Override with PROTOCOLS="5,4,3" once known.
-const PROTOCOL_CANDIDATES = (process.env.PROTOCOLS || '6,5,4,3,7')
+// Order = K-line first for this 2005 1KD-FTV: KWP fast, KWP 5-baud, ISO 9141-2,
+// then CAN 11/500 & 29/500 as a cheap safety net (they fail instantly here — the
+// 2026-06-04 run got NO DATA on CAN, BUS INIT: ERROR on K-line). Override via
+// PROTOCOLS="5,4,3".
+const PROTOCOL_CANDIDATES = (process.env.PROTOCOLS || '5,4,3,6,7')
   .split(',')
   .map((s) => parseInt(s.trim(), 10))
   .filter((n) => !Number.isNaN(n));
+// How many times to retry the K-line init per protocol. Clones often fail the
+// first wake-up and lock on the second. Set KLINE_RETRIES=1 to go fast.
+const KLINE_RETRIES = Number(process.env.KLINE_RETRIES) || 2;
+
+// --- transport selection ---------------------------------------------------
+// TRANSPORT=auto (default) | wifi | serial. In 'auto' we use a USB serial
+// adapter if one is plugged in (the recommended fix for this K-line car — see
+// SerialTransport), otherwise fall back to the WiFi adapter. This makes the
+// watcher capture from WHATEVER the user plugs in, hands-free.
+const TRANSPORT = (process.env.TRANSPORT || 'auto').toLowerCase();
+const SERIAL_PATH = process.env.ELM_SERIAL_PATH || '';
+const SERIAL_BAUD = Number(process.env.ELM_BAUD) || 115200; // OBDLink SX default
+// Common device names for USB ELM/STN adapters on Linux/Crostini: FTDI & CH340
+// land on ttyUSB*, CDC-ACM (some genuine ELM) on ttyACM*. ttyS* are the
+// container's built-in UARTs — never an adapter, so they're excluded.
+const SERIAL_CANDIDATES = ['/dev/ttyUSB0', '/dev/ttyUSB1', '/dev/ttyACM0', '/dev/ttyACM1'];
+
+/** Resolve the serial device path to use, or null to use WiFi. */
+function resolveSerialPath(): string | null {
+  if (USE_MOCK) return null;
+  if (TRANSPORT === 'wifi') return null;
+  if (TRANSPORT === 'serial') {
+    // Explicit serial: honour the configured path (wait for it to appear), else
+    // fall back to the first known candidate name.
+    return SERIAL_PATH || SERIAL_CANDIDATES.find((p) => fs.existsSync(p)) || SERIAL_CANDIDATES[0]!;
+  }
+  // auto: only choose serial if a device is actually present right now.
+  if (SERIAL_PATH && fs.existsSync(SERIAL_PATH)) return SERIAL_PATH;
+  return SERIAL_CANDIDATES.find((p) => fs.existsSync(p)) ?? null;
+}
 
 function parseIntFlexible(v: string | undefined, dflt: number): number {
   if (!v) return dflt;
@@ -98,9 +138,12 @@ function capturesDir(): string {
   return path.join(process.cwd(), 'captures');
 }
 
-/** Is the adapter reachable right now? (Quick TCP connect probe.) */
+/** Is the adapter reachable right now? Serial: the device file exists. WiFi: a
+ *  quick TCP connect probe. */
 function adapterReachable(): Promise<boolean> {
   if (USE_MOCK) return Promise.resolve(true);
+  const serialPath = resolveSerialPath();
+  if (serialPath) return Promise.resolve(fs.existsSync(serialPath));
   return new Promise((resolve) => {
     const sock = new net.Socket();
     const done = (ok: boolean) => {
@@ -140,12 +183,23 @@ async function runCapture(stamp: string): Promise<void> {
   const dir = capturesDir();
   fs.mkdirSync(dir, { recursive: true });
 
+  // CMD_TIMEOUT_MS override: the first real OBD request on a K-line car (ISO
+  // 9141-2 / ISO 14230-4, as on this 2005 1KD-FTV) triggers a slow protocol
+  // search; 4 s is often too tight. Default higher here, overridable per run.
+  const cmdTimeout = Number(process.env.CMD_TIMEOUT_MS) || DEFAULT_ADAPTER_CONFIG.commandTimeoutMs;
+  const serialPath = resolveSerialPath();
   const transport: Transport = USE_MOCK
     ? new MockTransport()
-    // CMD_TIMEOUT_MS override: the first real OBD request on a K-line car (ISO
-    // 9141-2 / ISO 14230-4, as on this 2005 1KD-FTV) triggers a slow protocol
-    // search; 4 s is often too tight. Default higher here, overridable per run.
-    : new ElmWifiTransport({ host: HOST, port: PORT, commandTimeoutMs: Number(process.env.CMD_TIMEOUT_MS) || DEFAULT_ADAPTER_CONFIG.commandTimeoutMs });
+    : serialPath
+      ? new SerialTransport({ path: serialPath, baudRate: SERIAL_BAUD, commandTimeoutMs: cmdTimeout })
+      : new ElmWifiTransport({ host: HOST, port: PORT, commandTimeoutMs: cmdTimeout });
+  log.info(
+    USE_MOCK
+      ? '  transport: MOCK'
+      : serialPath
+        ? `  transport: USB serial ${serialPath} @ ${SERIAL_BAUD} baud`
+        : `  transport: WiFi ${HOST}:${PORT}`,
+  );
 
   // Always release the adapter's single client slot, even if the capture throws
   // partway through — otherwise a half-open socket lingers and blocks every
@@ -165,8 +219,10 @@ async function runCapture(stamp: string): Promise<void> {
   if (!protocolLocked) {
     const voltage = await session.raw('ATRV').catch(() => 'n/a');
     log.info(`  protocol not locked (ATDP=${init.protocol}); OBD-port voltage ATRV=${voltage}`);
-    log.info(`  forcing protocol — trying ATSP ${PROTOCOL_CANDIDATES.join(',')}`);
-    const det = await session.tryProtocols(PROTOCOL_CANDIDATES);
+    log.info(
+      `  forcing protocol — trying ATSP ${PROTOCOL_CANDIDATES.join(',')} (K-line init x${KLINE_RETRIES}, manual ATSI/ATFI + ATKW0/ATAT0/ATSTFF)`,
+    );
+    const det = await session.tryProtocols(PROTOCOL_CANDIDATES, undefined, KLINE_RETRIES);
     if (det.protocol === 0) {
       throw new Error(
         `no OBD protocol answered 0100 (tried ${PROTOCOL_CANDIDATES.join(',')}). ` +
@@ -307,8 +363,18 @@ function isoStamp(): string {
 
 async function main(): Promise<void> {
   console.log('\n=== Prado OBD auto-capture watcher ===');
-  console.log(USE_MOCK ? 'MODE: MOCK (simulated Prado — captures immediately)' : `Watching for adapter at ${HOST}:${PORT}`);
-  console.log('The user only needs to: plug in the adapter, join its WiFi, and rev when prompted.');
+  if (USE_MOCK) {
+    console.log('MODE: MOCK (simulated Prado — captures immediately)');
+  } else {
+    const serialPath = resolveSerialPath();
+    if (serialPath) {
+      console.log(`Watching for USB adapter at ${serialPath} @ ${SERIAL_BAUD} baud${fs.existsSync(serialPath) ? ' (present)' : ' (waiting for plug-in)'}`);
+      console.log('Plug in the USB OBD adapter (attach it to Linux in ChromeOS first). No WiFi switch needed.');
+    } else {
+      console.log(`Watching for WiFi adapter at ${HOST}:${PORT} (no USB adapter detected)`);
+      console.log('Plug in the adapter, join its WiFi, and rev when prompted.');
+    }
+  }
   console.log('A capture runs automatically each time the adapter becomes reachable.\n');
 
   const state = { phase: 'waiting' as 'waiting' | 'present' | 'captured' };
