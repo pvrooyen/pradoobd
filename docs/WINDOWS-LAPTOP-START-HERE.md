@@ -86,11 +86,14 @@ Two routes — see the "Download & cost (current)" section in
 
 - **Official (licensed):** Toyota TIS at `techinfo.toyota.com` — **~$35 for a
   2-day pass**, ~$55/month, ~$580/yr standard. Legit but overkill for one car.
-- **Standalone build (what every Mini-VCI clone ships with, $0, no key):**
-  **V17.30.011** (Nov-2022 data, FT232 Mini-VCI compatible, runs Win7–Win11
-  32/64-bit) is the community-standard sweet spot for a 2005 Prado. Get it from an
-  established vendor blog (OBDII365 / UOBDII / vxdiagshop / autosvs). These mirrors
-  can bundle junk → install on THIS borrowed laptop, you vet the files.
+- **Standalone build (CHOSEN — $0, no key):** **V16.20.023 primary** (best-tested
+  with Mini-VCI, full 1KD injector/Utility UI), V17.30.011 + V13.x fallbacks, **skip
+  V18**. Source by reputation: OBDII365 / UOBDII / the FT86CLUB-ih8mud Google-Drive
+  pack. ⚠️ **Do NOT use the mini-CD bundled with the cable — documented malware
+  vector.** The crack is **vetted in a hardened VirtualBox VM first** (see
+  `docs/TECHSTREAM-SANDBOX-VETTING.md` — two-stage detonation + VirusTotal + a
+  red-flag rubric; the decisive rule: a local OBD tool making ANY outbound
+  connection = don't use it). ⛔ **Never flash the cable firmware.**
 
-The bundled CD the cable came with is NOT needed (out of date) and the user no
-longer has it anyway.
+The user declined the official $80/48h pass (the cheap $30 TIS tier is docs-only, no
+Techstream). The bundled CD is not used (malware vector + the user can't read it).

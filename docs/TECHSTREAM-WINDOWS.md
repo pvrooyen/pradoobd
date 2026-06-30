@@ -38,20 +38,32 @@ Legit, always-current, but priced for shops and overkill for one car:
 
 This route needs the "Techstream Lite" + GTS+ agent and an active subscription.
 
-### Route B — Standalone build (what every Mini-VCI clone ships with) — **$0, no key**
+### Route B — Standalone build (what every Mini-VCI clone ships with) — **$0, no key** ✅ CHOSEN
 This is the offline, no-subscription Techstream the cable was designed for and what
-the owner community uses for self-diagnosis. **Recommended version for this 2005
-Prado: V17.30.011** (Nov-2022 vehicle data, explicitly Mini-VCI FT232-compatible,
-runs Win7–Win11 32/64-bit). V16.20.023 and V18.00.008 also work; V17.30.011 is the
-sweet spot. Offline diagnosis (Health Check, Data List, active tests) works without
-any account — only *online programming* would need a paid TIS account, which this
-job doesn't.
+the owner community uses for self-diagnosis. Offline diagnosis (Health Check, Data
+List, active tests, injector coding) works without any account — only *online
+programming* would need a paid TIS account, which this job doesn't.
 
-Get it from an established vendor blog: OBDII365, UOBDII, vxdiagshop, or autosvs
-(search "Techstream 17.30.011 free download"). ⚠️ These unofficial mirrors can
-bundle junk/adware — install on the **borrowed** laptop (not a daily driver), and
-**let Claude vet the file list** before you run anything. Disable any "download
-manager" and grab the direct archive.
+**Recommended version for this 2005 1KD-FTV (per the 2026-06-30 deep investigation):
+V16.20.023 primary** — the most widely "tested-working-with-Mini-VCI" build, full
+1KD Utility/Injector-Compensation + Pilot/Small-Quantity-Learning UI, clean on
+Win10/11 x64. Keep **V17.30.011** and a **V13.x** archive as fallbacks for stubborn
+old K-line comms. **Skip V18** for this car (forums report thinner menus on older
+cars).
+
+**Source (by reputation):** OBDII365 or UOBDII download pages (highest Trustpilot,
+most-cited, no infection reports), or the FT86CLUB / ih8mud "Techstream in 5
+minutes" Google-Drive pack (vetted by thousands of hobbyists). ⚠️ **Do NOT use the
+mini-CD that shipped with the cable — that's the documented malware vector**
+(trojans found on those CDs), not the blog/forum links. These mirrors can still
+bundle junk → we **VirusTotal-scan + detonate in a VM sandbox first**
+(`docs/TECHSTREAM-SANDBOX-VETTING.md`), then install on the **borrowed** laptop, not
+the daily desktop.
+
+> ⛔ **NEVER flash the cable's firmware.** `FirmwareUpdateTool.exe` is used ONLY for
+> its "Device Info" connectivity check — its update/flash function can **brick clone
+> cables**. Your genuine FT232RL firmware 1.4.x is already the correct K-line
+> hardware for this car; leave it alone.
 
 > For a one-off self-diagnosis of your own car, Route B is the community norm and
 > costs nothing. Route A's 2-day pass (~$35) is the clean licensed alternative if

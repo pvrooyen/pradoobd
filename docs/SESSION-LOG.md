@@ -5,6 +5,67 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-06-30 (cont.) — scope = full diagnostics + coding; cracked route + VM sandbox
+
+**Scope change:** not aircon-only. **Aircon is FIXED**; remaining jobs are (1) **cooling
+fans not moving** (diagnose via Engine/A-C ECU Data List → Active Test on the fan
+output), and (2) **injectors were replaced and NOT coded** → running inefficiently.
+Injector job is TWO steps on the 1KD-FTV: **Injector Compensation** (enter each
+injector's 30-char code per cylinder, Engine→Utility) **THEN Pilot/Small Quantity
+Learning** (separate Utility routine, engine warm) — skipping the 2nd is a known
+cause of rough/inefficient running. **BLOCKER:** need the 30-char codes etched on
+each new injector (receipt/boxes/install photos) — nothing can recover these.
+
+**Cost decision:** official Techstream is **$80/48h** (NOT the $30 tier — that's
+Library/docs only, no Techstream; confirmed from the user's screenshot of the TIS
+price table). User **declined $80**; chose the **free cracked standalone**, "as safe
+as possible." So the plan is: **vet the crack in a hardened VirtualBox VM, then run
+it on the borrowed laptop** (not the daily desktop).
+
+**Chromebook/Wine ruled out earlier; desktop can't go to the car (it's a desktop).**
+This session's machine is the Windows **desktop** — used to PREP + sandbox-vet; the
+**borrowed laptop (available tomorrow)** does the real at-the-car work.
+
+**Deep investigation (2 agents) — key findings:**
+- **Cable is the RIGHT hardware:** genuine FT232RL fw 1.4.x has CAN+K-Line chips,
+  ideal for a 2005 K-line 1KD. The newer VXDIAG Nano would be WORSE (fails K-line).
+  **⛔ Never flash the cable firmware** (FirmwareUpdateTool "Device Info" check only;
+  flashing bricks clones).
+- **Version:** **V16.20.023 primary**, V17.30.011 + V13.x fallbacks, **skip V18**.
+- **Source:** OBDII365 / UOBDII / FT86CLUB-ih8mud Google-Drive pack. **The mini-CD
+  bundled with cables is the documented malware vector — do NOT use it** (user can't
+  read it anyway).
+- **Crack = a license-bypass patcher ("Toyota Launcher.exe")**, not a service.
+  Expected AV noise = `Win32/Ymacco.AA5C`/`Riskware`/`Keygen` on the patcher ONLY;
+  the Techstream installer scans clean. Named families (RedLine/Lumma/AsyncRAT/
+  CoinMiner…) or ANY outbound network = real threat, discard.
+- **Sandbox method:** hardened VM (NO Guest Additions, realistic specs, no real
+  logins), Sysinternals toolkit pre-staged in the clean snapshot, **two-stage
+  detonation** (offline run, then fake-net run), watch processes/drops/persistence/
+  network/Defender. **Decisive rule: a local OBD tool should make ZERO internet
+  connections — any phone-home → don't run on real hardware.** VM-clean ≠
+  bare-metal-clean, so real use stays on the borrowed (non-daily) laptop.
+  Full rubric: `docs/TECHSTREAM-SANDBOX-VETTING.md`.
+
+**Prep staged this session (autonomous, on the desktop):**
+- VirtualBox 7.2.10 installed (official, winget). MEGAcmd installed (to pull the
+  MEGA-hosted archive). Staging dirs under `C:\_dev\pradoobd-sandbox` (OUTSIDE the
+  git repo — nothing huge/risky committed).
+- Windows 11 sandbox ISO downloading (8 GB, BITS background, resumable) via a
+  genuine `software.download.prss.microsoft.com` URL (Fido).
+- New docs: `TECHSTREAM-SANDBOX-VETTING.md`; updated `TECHSTREAM-WINDOWS.md`
+  (V16.20.023, source reputation, no-flash rule) + `WINDOWS-LAPTOP-START-HERE.md`.
+
+**Next session (resume fast):**
+1. **User:** wired keyboard → MSI BIOS (`Del`→`F7`→`OC → CPU Features → Intel
+   Virtualization Tech = Enabled`→`F10`) to enable VT-x (currently OFF). Say "done".
+2. **Claude:** verify VT-x on → build hardened VM from the ISO → pull V16.20.023
+   into quarantine → VirusTotal → two-stage detonation against the rubric → if
+   clean, the user explores the real Techstream UI safely.
+3. **User (no rush):** find the 30-char injector codes.
+
+---
+
 ## 2026-06-30 — Mini-VCI + Techstream cable arrived; built read-only safe mode
 
 **What arrived:** a **Toyota Diagnostic Mini VCI (J2534) cable + TIS Techstream**
