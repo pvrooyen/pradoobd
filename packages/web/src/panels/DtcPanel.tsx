@@ -21,10 +21,19 @@ export function DtcPanel({ obd }: { obd: ObdApi }) {
         <button className="btn primary" disabled={!connected} onClick={() => obd.readDtcs()}>
           Read DTCs
         </button>
-        <button className="btn danger" disabled={!connected} onClick={clear}>
-          Clear DTCs
-        </button>
+        {/* Clear DTCs writes to the car — hidden entirely in read-only mode so
+            it can't be invoked. The server also refuses it as a backstop. */}
+        {!obd.readOnly && (
+          <button className="btn danger" disabled={!connected} onClick={clear}>
+            Clear DTCs
+          </button>
+        )}
       </div>
+      {obd.readOnly && (
+        <p className="muted" style={{ marginTop: -4, marginBottom: 12 }}>
+          🔒 Read-only mode — clearing codes is disabled (it writes to the car).
+        </p>
+      )}
 
       {obd.dtcs.length === 0 ? (
         <p className="muted">No codes read yet (or none stored). Read DTCs to check.</p>

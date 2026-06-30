@@ -1,0 +1,96 @@
+# START HERE — fresh Claude Code session on the borrowed Windows laptop
+
+If you are a Claude Code session that just started on a **Windows laptop** the user
+borrowed to run **Toyota Techstream**: this file is your mission for today. Read it
+first, then `docs/TECHSTREAM-WINDOWS.md` (the detailed procedure) and
+`docs/SESSION-LOG.md` (2026-06-30 entry) for full context.
+
+## The one-line goal
+
+Get **Techstream + the Mini-VCI J2534 cable** working on THIS laptop and use it to
+diagnose the **air-conditioning** on the user's **2005 Toyota Land Cruiser Prado
+(120-series, 1KD-FTV 3.0 D-4D diesel)** — via a **Health Check** (all-ECU DTC scan)
+and the **A/C ECU Data List** (live values). Those are read-only and do ~95% of the
+diagnosis. Active tests only later, carefully (see safety below).
+
+## Operating contract (unchanged — see CLAUDE.md)
+
+**The user does not use the terminal. YOU run every command** via your tools and
+report outcomes. The user's jobs: talk to you, do physical things (plug the cable
+into the OBD port under the dash, ignition/engine, climate on), and click inside
+the **Techstream GUI** when you guide him (Techstream is a Windows GUI app — you
+can't click its buttons, so for THAT app you tell him exactly what to click and he
+reports what he sees / pastes screenshots).
+
+## Why we're on Windows (don't relitigate)
+
+- The Mini-VCI is a **J2534** cable, **not an ELM327**. Our own app cannot drive it.
+  Only **Techstream** speaks its protocol, and only Techstream's closed
+  ECU-definition DB knows how to talk to the **A/C ECU**. No open-source/Linux port
+  exists (checked 2026-06-30).
+- The cheap **ELM327 WiFi adapter is redundant** for this goal and can't even init
+  this car's K-line (proven June 2026). Don't suggest it. Don't suggest the
+  Chromebook. This laptop + Techstream is the path.
+- The cable already enumerated on the user's desktop as `COM4`, genuine FTDI ID
+  `0403:6001` (good sign — likely not a bricked counterfeit). On THIS laptop, the
+  COM number may differ — check Device Manager → Ports.
+
+## Today's sequence (you drive)
+
+1. **Verify the repo built** (optional; our app isn't used for the diagnosis, but
+   keep it green): `npm install` then `npm run build`. The `serialport` optional
+   dep may be absent — that's fine, it's a dynamic import.
+2. **Detect the cable:** run a PowerShell check for the FTDI COM port (see snippet
+   below) and tell the user the COM number you find.
+3. **Download Techstream + drivers** — guide the user; see the "Download & cost"
+   section below and `docs/TECHSTREAM-WINDOWS.md`. Vet the files; tell him which to
+   keep/skip.
+4. **Install in order:** Techstream → MVCI driver → FTDI VCP driver → merge
+   `mvci-x64.reg` (64-bit) → `FirmwareUpdateTool.exe` "Device Info" must see the
+   cable (the real genuine-vs-clone test).
+5. **Connect to the car:** engine running, climate on, cable in OBD port. In
+   Techstream: Connect to Vehicle → if VIN auto-read fails, pick Prado / 2005 /
+   1KD-FTV manually.
+6. **Diagnose (read-only):** Health Check (record ALL DTCs) → A/C ECU Data List
+   (compressor request, evap temp, pressure switch, blower, servo positions,
+   refrigerant pressure) → Freeze Frame for any A/C DTC. Have the user paste values
+   / screenshots; you correlate with the symptoms.
+7. **Only if needed, active tests** (Magnetic Clutch / Compressor ON, blower, air-
+   mix servo) — see safety. Decide together first.
+
+### Cable-detect snippet (you run this)
+
+```powershell
+Get-PnpDevice -Class Ports -ErrorAction SilentlyContinue |
+  Where-Object { $_.InstanceId -match 'FTDIBUS|VID_0403' } |
+  Select-Object Status, FriendlyName, InstanceId | Format-Table -AutoSize
+```
+A line like `USB Serial Port (COM5) … FTDIBUS\VID_0403+PID_6001…` = cable present.
+
+## SAFETY (the bricking risk is WRITES, not reads)
+
+- **Reads are safe**: Health Check, Data List, Freeze Frame change nothing.
+- **Active tests / Utility / customization / reflash are WRITES.** The classic way
+  to brick an ECU is losing **power or USB mid-write**. So before ANY write:
+  laptop on **mains power**, **stable USB** (no flaky hub), engine in the expected
+  state. Never run reflash/immobiliser/calibration for an aircon job — unrelated
+  and the real risk.
+- Our app's read-only guard does NOT protect Techstream (different software). In
+  Techstream, safety = sticking to read functions until you and the user
+  deliberately choose an active test.
+
+## Download & cost (tell the user this)
+
+Two routes — see the "Download & cost (current)" section in
+`docs/TECHSTREAM-WINDOWS.md` for the full breakdown. Summary:
+
+- **Official (licensed):** Toyota TIS at `techinfo.toyota.com` — **~$35 for a
+  2-day pass**, ~$55/month, ~$580/yr standard. Legit but overkill for one car.
+- **Standalone build (what every Mini-VCI clone ships with, $0, no key):**
+  **V17.30.011** (Nov-2022 data, FT232 Mini-VCI compatible, runs Win7–Win11
+  32/64-bit) is the community-standard sweet spot for a 2005 Prado. Get it from an
+  established vendor blog (OBDII365 / UOBDII / vxdiagshop / autosvs). These mirrors
+  can bundle junk → install on THIS borrowed laptop, you vet the files.
+
+The bundled CD the cable came with is NOT needed (out of date) and the user no
+longer has it anyway.

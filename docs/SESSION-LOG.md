@@ -5,6 +5,72 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-06-30 — Mini-VCI + Techstream cable arrived; built read-only safe mode
+
+**What arrived:** a **Toyota Diagnostic Mini VCI (J2534) cable + TIS Techstream**
+(photo: the labelled cable + a CD-ROM the user no longer has). This is exactly the
+"real path" the 2026-06-04 research recommended for comprehensive / A/C-ECU data.
+
+**Key hardware finding:** plugged into the Windows **desktop**, the cable
+enumerated cleanly as `USB Serial Port (COM4)`, FTDI ID **`VID_0403 PID_6001`**,
+driver bound, status OK → very likely a **genuine-ID FTDI** (dodges the worst
+clone gotcha). The bundled CD is unneeded (out of date); download Techstream
+fresh.
+
+**Critical correction (don't lose this):** the Mini-VCI is a **J2534** cable, not
+an ELM327. **Our app cannot drive it** — our `Transport` speaks ELM327 AT-commands
+over a serial port; the Mini-VCI has no AT interpreter and only speaks Toyota's
+proprietary J2534/UDS protocol that **only Techstream** implements. So plugging
+this cable into our app yields nothing. The A/C-ECU diagnosis the user wants is
+**only** reachable via **Techstream**, whose closed ECU-definition database is the
+one place the 2005 Prado A/C diagnostic dictionary exists (no open-source port
+exists — checked: OpenVehicleDiag has Mercedes defs only; the NikolaKozina Linux
+J2534 driver is for the Tactrix OpenPort, not the Mini-VCI; the SavvyCAN
+Mini-VCI-on-Linux thread closed unresolved).
+
+**Chromebook verdict (researched, then ruled out):** two hard walls — (1) ChromeOS
+deliberately blocks FTDI USB passthrough into Crostini (`#crostini-usb-allow-
+unsupported` whitelists Arduino-class, not this), and (2) Techstream is
+Windows-only .NET whose MVCI J2534 driver doesn't work reliably under Wine. The
+genuine-FTDI `0403:6001` *is* named in the Crostini whitelist, so a serial port
+*might* appear — but a serial port is useless because nothing on Linux speaks the
+Mini-VCI's J2534 framing. **Plan: Techstream on a borrowed Windows laptop.**
+
+**What we built this session (read-only safe foundation):**
+- `shared/src/safety.ts` (NEW) — `classifyCommand()` / `isVehicleWrite()`: the
+  single source of truth for "does this command write to the car?" Deny-list keyed
+  on the OBD/UDS service byte (04, 2F, 31, 2E/3B, 3D, 27, 28, 11, 85, 34–38);
+  AT/ST and reads (01/02/03/07/09/0A/22/19/3E) allowed; unknown → fail-safe block.
+- `server/src/transport/ReadOnlyGuard.ts` (NEW) — a `Transport` decorator that
+  rejects vehicle-write commands at the choke point (every command goes through
+  `Transport.send()`), so NO path (terminal, bridge, watcher, future) can write
+  when read-only is on. `withReadOnlyGuard()` + `READ_ONLY` env.
+- `watch.ts` / `capture.ts` — default `READ_ONLY` **ON** (pure read tools), wrap
+  the transport, print a SAFETY banner.
+- `bridge/BridgeSession.ts` — default read-only ON, wraps transport, refuses
+  `clearDtcs` with a structured `READ_ONLY` error, advertises `readOnly` in
+  `connectionState`. `web/useObd.ts` exposes it; `DtcPanel` hides the Clear button
+  and shows a 🔒 note.
+- npm scripts `safe-read` / `safe-read:mock` (root + server) = watcher with
+  `READ_ONLY=1` forced.
+- Verified: 26/26 checks (reads pass, every write service blocked, unknown
+  fail-safe, disabled-guard pass-through) + full `safe-read:mock` capture written.
+  Whole monorepo builds clean (installed the optional `serialport` dep so `tsc`
+  resolves the dynamic import on this desktop).
+- Docs: `docs/CHROMEBOOK-READONLY.md` (the safe Chromebook step) and
+  `docs/TECHSTREAM-WINDOWS.md` (download sources, driver/registry order, version
+  pick for the 2005 Prado, and the active-test safety rules).
+
+**Plan from here:**
+1. **Chromebook (safe, optional):** `npm run safe-read` for a read-only ELM327
+   pass. Expect the same K-line-clone wall (no ECU data) — but it's safe and free.
+2. **Windows laptop (the real diagnosis):** follow `docs/TECHSTREAM-WINDOWS.md` —
+   install Techstream + MVCI/FTDI driver + x64 reg fix, connect, run **Health
+   Check** then **A/C ECU Data List** (all read-only). Active tests only after,
+   on mains power + stable USB.
+
+---
+
 ## 2026-06-04 — verdict: the WiFi clone can't do K-line; comms blocker is the adapter
 
 **Goal:** more captures (Elvera at the laptop, Pierre driving so the engine ran); then

@@ -1,5 +1,10 @@
 # CLAUDE.md — instructions for Claude Code sessions in this repo
 
+> 🪟 **On a Windows laptop to run Techstream?** Read
+> **`docs/WINDOWS-LAPTOP-START-HERE.md` first** — that's the current mission
+> (diagnose the Prado's aircon via Techstream + the Mini-VCI cable). Then this
+> file and `docs/CLAUDE-CONTEXT.md` for background.
+
 **Read `docs/CLAUDE-CONTEXT.md` first.** It is the full handoff: what this project
 is, how we work, and where everything lives. This file is the short version.
 

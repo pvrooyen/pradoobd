@@ -37,6 +37,7 @@ import {
 import { ObdSession } from './protocol/ObdSession.js';
 import { ElmWifiTransport } from './transport/ElmWifiTransport.js';
 import { MockTransport } from './transport/MockTransport.js';
+import { withReadOnlyGuard, readReadOnlyEnv } from './transport/ReadOnlyGuard.js';
 import type { Transport } from './transport/Transport.js';
 import { createLogger } from './util/logger.js';
 
@@ -46,6 +47,9 @@ const HOST = process.env.ELM_HOST || DEFAULT_ADAPTER_CONFIG.host;
 const PORT = Number(process.env.ELM_PORT) || DEFAULT_ADAPTER_CONFIG.port;
 // Allow a non-interactive run (no rev prompt) for unattended/scripted use.
 const NONINTERACTIVE = process.env.NONINTERACTIVE === '1';
+// Read-only safety, default ON: capture is a pure read tool and must never write
+// to the car. Refuses vehicle writes at the transport. Override with READ_ONLY=0.
+const READ_ONLY = readReadOnlyEnv(true);
 
 interface RawExchange {
   command: string;
@@ -122,9 +126,10 @@ async function run(): Promise<void> {
   fs.mkdirSync(capturesDir, { recursive: true });
 
   const rawLog: RawExchange[] = [];
-  const transport: Transport = USE_MOCK
+  const baseTransport: Transport = USE_MOCK
     ? new MockTransport()
     : new ElmWifiTransport({ host: HOST, port: PORT, commandTimeoutMs: DEFAULT_ADAPTER_CONFIG.commandTimeoutMs });
+  const transport: Transport = withReadOnlyGuard(baseTransport, READ_ONLY);
 
   // Tee every adapter exchange into the raw log via a thin wrapper.
   const session = new ObdSession(transport);
@@ -135,7 +140,12 @@ async function run(): Promise<void> {
   let lastCmd = '';
   transport.on('data', () => { /* low-level stream; summary captured per-call below */ });
 
-  console.log(`\n=== Prado OBD capture ${USE_MOCK ? '(MOCK)' : `→ ${HOST}:${PORT}`} ===\n`);
+  console.log(`\n=== Prado OBD capture ${USE_MOCK ? '(MOCK)' : `→ ${HOST}:${PORT}`} ===`);
+  console.log(
+    READ_ONLY
+      ? 'SAFETY: READ-ONLY mode is ON — vehicle writes are refused (clear DTCs, active tests, ECU reset, reflash).\n'
+      : 'SAFETY: READ-ONLY mode is OFF — vehicle writes allowed.\n',
+  );
 
   log.info('connecting…');
   await transport.open();

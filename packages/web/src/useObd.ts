@@ -63,6 +63,8 @@ export interface ObdApi {
   state: ConnectionState;
   adapterId?: string;
   protocol?: string;
+  /** Server is enforcing read-only safety — write affordances should be hidden. */
+  readOnly: boolean;
   supported: PidDefinition[];
   dtcs: Dtc[];
   vin?: string;
@@ -91,6 +93,9 @@ export function useObd(): ObdApi {
   const [state, setState] = useState<ConnectionState>('disconnected');
   const [adapterId, setAdapterId] = useState<string>();
   const [protocol, setProtocol] = useState<string>();
+  // Default to read-only (safe) until the server tells us otherwise, so the UI
+  // never offers a write affordance before it knows the server's mode.
+  const [readOnly, setReadOnly] = useState<boolean>(true);
   const [supported, setSupported] = useState<PidDefinition[]>([]);
   const [dtcs, setDtcs] = useState<Dtc[]>([]);
   const [vin, setVin] = useState<string>();
@@ -164,6 +169,7 @@ export function useObd(): ObdApi {
           setState(evt.state);
           if (evt.adapterId) setAdapterId(evt.adapterId);
           if (evt.protocol) setProtocol(evt.protocol);
+          if (typeof evt.readOnly === 'boolean') setReadOnly(evt.readOnly);
           if (evt.message) pushTerminal({ dir: 'sys', text: `[state ${evt.state}] ${evt.message}` });
           break;
         case 'raw':
@@ -235,6 +241,7 @@ export function useObd(): ObdApi {
     state,
     adapterId,
     protocol,
+    readOnly,
     supported,
     dtcs,
     vin,

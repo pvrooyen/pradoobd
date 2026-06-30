@@ -29,6 +29,7 @@ import {
 import { ObdSession } from '../protocol/ObdSession.js';
 import { ElmWifiTransport } from '../transport/ElmWifiTransport.js';
 import { MockTransport } from '../transport/MockTransport.js';
+import { withReadOnlyGuard, readReadOnlyEnv } from '../transport/ReadOnlyGuard.js';
 import type { Transport } from '../transport/Transport.js';
 import { createLogger } from '../util/logger.js';
 
@@ -39,6 +40,12 @@ export type SendFn = (event: ServerEvent) => void;
 export interface BridgeOptions {
   /** When true, use the in-process MockTransport instead of real WiFi. */
   useMock: boolean;
+  /**
+   * When true, enforce read-only safety: vehicle-write commands are refused at
+   * the transport and clearDtcs is rejected. Defaults to the READ_ONLY env
+   * (default ON) when not specified.
+   */
+  readOnly?: boolean;
 }
 
 export class BridgeSession {
@@ -48,11 +55,15 @@ export class BridgeSession {
   private liveTimer: NodeJS.Timeout | null = null;
   private liveStart = 0;
   private busy = false;
+  /** Read-only safety: when true, vehicle writes are refused (default ON). */
+  private readonly readOnly: boolean;
 
   constructor(
     private readonly send: SendFn,
     private readonly options: BridgeOptions,
-  ) {}
+  ) {
+    this.readOnly = options.readOnly ?? readReadOnlyEnv(true);
+  }
 
   /** Entry point for every message from the browser. */
   async handle(cmd: ClientCommand): Promise<void> {
@@ -103,13 +114,17 @@ export class BridgeSession {
     await this.disconnect(); // ensure clean slate
 
     this.emitState('connecting');
-    this.transport = this.options.useMock
+    const baseTransport: Transport = this.options.useMock
       ? new MockTransport()
       : new ElmWifiTransport({
           host: this.config.host,
           port: this.config.port,
           commandTimeoutMs: this.config.commandTimeoutMs,
         });
+    // Wrap in the read-only guard so no write reaches the car when read-only is
+    // on, regardless of which command path (raw terminal, clearDtcs, future) is
+    // exercised. Belt to the explicit clearDtcs refusal's suspenders.
+    this.transport = withReadOnlyGuard(baseTransport, this.readOnly);
 
     this.transport.on('close', () => this.emitState('disconnected', { message: 'adapter closed' }));
     this.transport.on('error', (e) => this.emitState('error', { message: e.message }));
@@ -177,6 +192,17 @@ export class BridgeSession {
   private async clearDtcs(id?: string): Promise<void> {
     const s = this.requireSession(id);
     if (!s) return;
+    // Explicit refusal in read-only mode — clearer than letting the transport
+    // guard throw, and reported as a structured error the UI can show.
+    if (this.readOnly) {
+      this.emitError(
+        'Clear DTCs is disabled in read-only mode (it writes to the car). Set READ_ONLY=0 to enable.',
+        id,
+        'READ_ONLY',
+      );
+      this.send({ type: 'cleared', id, ok: false });
+      return;
+    }
     await this.withBusy(async () => {
       const ok = await s.clearDtcs();
       this.send({ type: 'cleared', id, ok });
@@ -303,7 +329,8 @@ export class BridgeSession {
   }
 
   private emitState(state: ConnectionState, extra: Partial<Extract<ServerEvent, { type: 'connectionState' }>> = {}): void {
-    this.send({ type: 'connectionState', state, ...extra });
+    // Always advertise the read-only flag so the UI can hide write affordances.
+    this.send({ type: 'connectionState', state, readOnly: this.readOnly, ...extra });
   }
 
   private emitError(message: string, id?: string, code?: string): void {

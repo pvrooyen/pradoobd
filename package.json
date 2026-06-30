@@ -20,6 +20,8 @@
     "capture:mock": "npm run build:shared && npm run capture:mock --workspace @pradoobd/server",
     "watch": "npm run build:shared && npm run watch --workspace @pradoobd/server",
     "watch:mock": "npm run build:shared && npm run watch:mock --workspace @pradoobd/server",
+    "safe-read": "npm run build:shared && npm run safe-read --workspace @pradoobd/server",
+    "safe-read:mock": "npm run build:shared && npm run safe-read:mock --workspace @pradoobd/server",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {

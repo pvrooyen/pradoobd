@@ -60,6 +60,7 @@ import { ObdSession } from './protocol/ObdSession.js';
 import { ElmWifiTransport } from './transport/ElmWifiTransport.js';
 import { SerialTransport } from './transport/SerialTransport.js';
 import { MockTransport } from './transport/MockTransport.js';
+import { withReadOnlyGuard, readReadOnlyEnv } from './transport/ReadOnlyGuard.js';
 import type { Transport } from './transport/Transport.js';
 import { createLogger } from './util/logger.js';
 
@@ -85,6 +86,14 @@ const PROTOCOL_CANDIDATES = (process.env.PROTOCOLS || '5,4,3,6,7')
 // How many times to retry the K-line init per protocol. Clones often fail the
 // first wake-up and lock on the second. Set KLINE_RETRIES=1 to go fast.
 const KLINE_RETRIES = Number(process.env.KLINE_RETRIES) || 2;
+
+// Read-only safety. The watcher is a pure read tool (init + scan + snapshots +
+// read DTCs + Mode 22 read) and never writes to the car, so we default the guard
+// ON: any vehicle-write command (clear DTCs, active test, ECU reset, reflash…)
+// is refused at the transport before it reaches the wire. This is the safe
+// foundation for the Chromebook step. Override with READ_ONLY=0 (not needed for
+// captures). See transport/ReadOnlyGuard.ts + shared/src/safety.ts.
+const READ_ONLY = readReadOnlyEnv(true);
 
 // --- transport selection ---------------------------------------------------
 // TRANSPORT=auto (default) | wifi | serial. In 'auto' we use a USB serial
@@ -188,17 +197,20 @@ async function runCapture(stamp: string): Promise<void> {
   // search; 4 s is often too tight. Default higher here, overridable per run.
   const cmdTimeout = Number(process.env.CMD_TIMEOUT_MS) || DEFAULT_ADAPTER_CONFIG.commandTimeoutMs;
   const serialPath = resolveSerialPath();
-  const transport: Transport = USE_MOCK
+  const baseTransport: Transport = USE_MOCK
     ? new MockTransport()
     : serialPath
       ? new SerialTransport({ path: serialPath, baudRate: SERIAL_BAUD, commandTimeoutMs: cmdTimeout })
       : new ElmWifiTransport({ host: HOST, port: PORT, commandTimeoutMs: cmdTimeout });
+  // Wrap in the read-only guard (default ON for the watcher) so no write can
+  // ever leave the laptop during a capture, whatever the protocol layer asks.
+  const transport: Transport = withReadOnlyGuard(baseTransport, READ_ONLY);
   log.info(
     USE_MOCK
-      ? '  transport: MOCK'
+      ? `  transport: MOCK${READ_ONLY ? ' [read-only]' : ''}`
       : serialPath
-        ? `  transport: USB serial ${serialPath} @ ${SERIAL_BAUD} baud`
-        : `  transport: WiFi ${HOST}:${PORT}`,
+        ? `  transport: USB serial ${serialPath} @ ${SERIAL_BAUD} baud${READ_ONLY ? ' [read-only]' : ''}`
+        : `  transport: WiFi ${HOST}:${PORT}${READ_ONLY ? ' [read-only]' : ''}`,
   );
 
   // Always release the adapter's single client slot, even if the capture throws
@@ -375,7 +387,12 @@ async function main(): Promise<void> {
       console.log('Plug in the adapter, join its WiFi, and rev when prompted.');
     }
   }
-  console.log('A capture runs automatically each time the adapter becomes reachable.\n');
+  console.log('A capture runs automatically each time the adapter becomes reachable.');
+  console.log(
+    READ_ONLY
+      ? 'SAFETY: READ-ONLY mode is ON — vehicle writes (clear DTCs, active tests, ECU reset, reflash) are refused.\n'
+      : 'SAFETY: READ-ONLY mode is OFF — vehicle writes are allowed. (Set READ_ONLY=1 to forbid them.)\n',
+  );
 
   const state = { phase: 'waiting' as 'waiting' | 'present' | 'captured' };
   // In mock mode, do one capture and exit so it's easy to verify.

@@ -117,6 +117,13 @@ export interface EvtConnectionState {
   adapterId?: string;
   protocol?: string;
   message?: string;
+  /**
+   * True when the server is enforcing read-only safety: vehicle-write commands
+   * (clear DTCs, active tests, ECU reset, reflash…) are refused at the transport.
+   * The UI uses this to disable/hide write affordances (e.g. the Clear DTCs
+   * button). Sent on every connectionState so the client always knows the mode.
+   */
+  readOnly?: boolean;
 }
 /** Echo + result of a raw command (also used for the terminal view). */
 export interface EvtRaw {

@@ -12,6 +12,8 @@
     "capture:mock": "cross-env MOCK=1 tsx src/capture.ts",
     "watch": "tsx src/watch.ts",
     "watch:mock": "cross-env MOCK=1 tsx src/watch.ts",
+    "safe-read": "cross-env READ_ONLY=1 tsx src/watch.ts",
+    "safe-read:mock": "cross-env READ_ONLY=1 MOCK=1 tsx src/watch.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
