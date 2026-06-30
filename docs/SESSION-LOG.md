@@ -56,13 +56,31 @@ This session's machine is the Windows **desktop** — used to PREP + sandbox-vet
 - New docs: `TECHSTREAM-SANDBOX-VETTING.md`; updated `TECHSTREAM-WINDOWS.md`
   (V16.20.023, source reputation, no-flash rule) + `WINDOWS-LAPTOP-START-HERE.md`.
 
+**Prep COMPLETED autonomously (end of 2026-06-30 session):**
+- ✅ Windows 11 ISO fully downloaded + finalized: `C:\_dev\pradoobd-sandbox\iso\
+  Win11_25H2_x64.iso` (7.89 GB / 8,471,603,200 bytes).
+- ✅ VirtualBox 7.2.10 installed. ✅ Sysinternals suite staged (184 MB) at
+  `guest-tools\SysinternalsSuite.zip` (goes into the clean VM snapshot).
+- ✅ Hardened VM-build script ready: `C:\_dev\pradoobd-sandbox\build-vm.ps1`
+  (no Guest Additions, 2 CPU/4GB/61GB, no shared folders/clipboard, NIC
+  disconnected for the offline run). Run it AFTER VT-x is on.
+- ⚠️ **Crack archive NOT downloaded yet.** MEGAcmd `get` on the public link failed
+  ("Not logged in") — MEGA blocks anonymous CLI fetches of this file. **Fix
+  tomorrow:** download the archive via the **VM's own browser** from the MEGA web
+  link (`mega.nz/file/xxU1ACTT#...`, from obd2gate/vxdiagshop) — doing it INSIDE
+  the sandbox VM is actually cleaner (the file never touches the host). Or use an
+  OBDII365/UOBDII/Google-Drive mirror. Then VirusTotal + detonate per
+  `docs/TECHSTREAM-SANDBOX-VETTING.md`. Quarantine dir is empty as of now.
+- Note: `C:\_dev\pradoobd-sandbox\` is the staging root, OUTSIDE the git repo.
+
 **Next session (resume fast):**
 1. **User:** wired keyboard → MSI BIOS (`Del`→`F7`→`OC → CPU Features → Intel
    Virtualization Tech = Enabled`→`F10`) to enable VT-x (currently OFF). Say "done".
-2. **Claude:** verify VT-x on → build hardened VM from the ISO → pull V16.20.023
-   into quarantine → VirusTotal → two-stage detonation against the rubric → if
-   clean, the user explores the real Techstream UI safely.
-3. **User (no rush):** find the 30-char injector codes.
+2. **Claude:** verify VT-x on → run `build-vm.ps1` → install Win11 in the VM (local
+   account, NO real logins) → copy in Sysinternals → take `clean-baseline` snapshot
+   → download V16.20.023 via the VM browser → VirusTotal → two-stage detonation
+   against the rubric → if clean, the user explores the real Techstream UI safely.
+3. **User (no rush):** find the 30-char injector codes (per-injector, for coding).
 
 ---
 
