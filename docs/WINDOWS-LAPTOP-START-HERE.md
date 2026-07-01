@@ -1,17 +1,59 @@
 # START HERE — fresh Claude Code session on the borrowed Windows laptop
 
 If you are a Claude Code session that just started on a **Windows laptop** the user
-borrowed to run **Toyota Techstream**: this file is your mission for today. Read it
-first, then `docs/TECHSTREAM-WINDOWS.md` (the detailed procedure) and
-`docs/SESSION-LOG.md` (2026-06-30 entry) for full context.
+(Pierre) borrowed to run **Toyota Techstream**: this file is your mission. Read it
+first, then `docs/TECHSTREAM-WINDOWS.md` + `docs/TECHSTREAM-SANDBOX-VETTING.md` for
+the vetting rubric, and `docs/SESSION-LOG.md` (newest entries) for full context.
+
+## ⛔ HARD RULE — do NOT install VirtualBox / any hypervisor / any USB-filter driver
+
+On 2026-07-01, installing VirtualBox on Pierre's **desktop** loaded VBoxUSBMon, which
+faulted the onboard Intel Bluetooth radio and killed mouse + keyboard + Bluetooth at
+once, forcing a hard reboot. **DECISION: run the cracked Techstream DIRECTLY on this
+laptop — no VM, no VirtualBox.** The borrowed laptop (not a daily machine) is itself
+the isolation. Do not install a hypervisor or USB-filter driver here either. If you
+think you need a VM, STOP and ask Pierre first. See the memory notes
+[[no-hypervisor-on-desktop]] / [[techstream-belongs-on-laptop]].
 
 ## The one-line goal
 
-Get **Techstream + the Mini-VCI J2534 cable** working on THIS laptop and use it to
-diagnose the **air-conditioning** on the user's **2005 Toyota Land Cruiser Prado
-(120-series, 1KD-FTV 3.0 D-4D diesel)** — via a **Health Check** (all-ECU DTC scan)
-and the **A/C ECU Data List** (live values). Those are read-only and do ~95% of the
-diagnosis. Active tests only later, carefully (see safety below).
+Get **Techstream + the Mini-VCI J2534 cable** working DIRECTLY on THIS laptop, safely
+(see the safest-practices checklist below), and diagnose Pierre's **2005 Toyota Land
+Cruiser Prado (120-series, 1KD-FTV 3.0 D-4D diesel)**. Aircon is FIXED. Real targets:
+1. **Cooling fans not moving** — Health Check → Engine/A-C ECU Data List → fan
+   **Active Test** to isolate relay vs. motor vs. input logic.
+2. **Injectors replaced but never coded** (running inefficiently) — Engine → Utility →
+   **Injector Compensation** (enter each injector's 30-char code) THEN **Pilot /
+   Small Quantity Learning** (separate, engine warm). BLOCKER: need the 30-char codes
+   etched on each injector (receipt / boxes / install photos).
+
+## ✅ Already proven (2026-07-01, in a since-deleted VM): the crack works
+
+The community package (ih8mud MEGA link) is a pre-built VM image
+`TechStream 12.20.024-v2.ova` (SHA256 A5F25A5FAC213892CF7787885F04A71E39277838BD3BCB4240BAC3AA61535E95).
+In that VM, **Techstream 12.20.024 launched, the crack activated** ("Subscription
+Expiration 1904d"), and **the Mini-VCI enumerated as a USB Serial Port** with the
+**XHorse MVCI J2534 v1.4.7** driver loaded. So the software + cable are known-good.
+On this laptop we install the SAME Techstream, but natively (not from the OVA) — get
+a Techstream **installer** package (not the .ova), or extract the app from a
+standard OBDII365/UOBDII/ih8mud installer bundle. Version 12.x or 16.20.023 both fine.
+
+## ✅ Safest-practices checklist (direct install, no VM) — follow in order
+
+1. Create a **System Restore point** first (built-in, no drivers) — reversibility.
+2. Get the Techstream package from a reputable source (OBDII365 / UOBDII / the
+   ih8mud "Techstream in 5 minutes" thread). **NEVER the mini-CD** that shipped with
+   the cable — that's the documented malware vector.
+3. **Scan before running**: Windows Defender + upload the archive to VirusTotal.
+   Rubric (see TECHSTREAM-SANDBOX-VETTING.md): a `Riskware`/`Keygen`/`PUA` flag on the
+   "Toyota Launcher" is the EXPECTED false-positive; a named stealer/RAT, OR any
+   outbound network connection = discard.
+4. Install Techstream → MVCI driver → FTDI driver → merge `mvci-x64.reg`. Keep the
+   laptop **OFFLINE** while running Techstream (a local OBD tool needs no internet).
+   Add a Defender exclusion ONLY for the known Toyota Launcher FP if it quarantines it.
+5. Plug in the Mini-VCI, run **MVCI FirmwareUpdateTool → Device Info** (read-only
+   connectivity check). ⛔ NEVER the flash/update function — it bricks clone cables.
+6. Then the car work: Health Check → fan Active Test → injector coding + pilot learn.
 
 ## Operating contract (unchanged — see CLAUDE.md)
 

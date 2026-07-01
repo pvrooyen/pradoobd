@@ -5,6 +5,40 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-07-01 — VM route PROVED the crack works, then BROKE the desktop; pivot to direct-on-laptop
+
+**Big result AND a serious incident.** Built a hardened VirtualBox VM, unattended-
+installed Win11, then imported a community OVA (`TechStream 12.20.024-v2.ova`, SHA256
+A5F25A5F…, from the ih8mud MEGA link). **Techstream 12.20.024 launched, crack active
+("Subscription Expiration 1904d"), and the Mini-VCI cable enumerated inside the VM as
+a USB Serial Port with the XHorse MVCI J2534 v1.4.7 driver loaded.** So the software +
+cable are confirmed working.
+
+**INCIDENT:** Installing VirtualBox loaded `VBoxUSBMon`, which faulted the onboard
+Intel Wireless Bluetooth radio (USB\VID_8087&PID_0025) into an Error state — killing
+the BT mouse, BT keyboard, and a wired USB keyboard simultaneously, forcing a hard
+reboot. Known VirtualBox-vs-onboard-Bluetooth conflict. Recovery (verified): reset the
+BT radio via Disable/Enable-PnpDevice; uninstalled VirtualBox; `sc delete` its filter
+drivers. VBoxUSBMon service GONE, no VBox services/kernel drivers loaded, Bluetooth OK,
+0 devices in Error. Remaining inert residue (2 locked VBoxNet*.sys files + 5 phantom
+80EE:CAFE USB nodes) clears on the pending cold `shutdown /s /f /t 0`. Reclaimed 32GB
+of VM/ISO/OVA files. Memory rules written: [[no-hypervisor-on-desktop]],
+[[techstream-belongs-on-laptop]].
+
+**DECISION (Pierre):** Drop the VirtualBox/VM route. Run the cracked Techstream
+**directly on the borrowed laptop** (not a daily machine = acceptable isolation),
+following safest practices. No hypervisor / USB-filter driver on either machine
+without asking. See the rewritten `docs/WINDOWS-LAPTOP-START-HERE.md` for the direct
+(no-VM) checklist: System Restore point → reputable source (NOT the mini-CD) →
+Defender+VirusTotal per the rubric → install → keep offline → Device-Info check
+(never flash) → Health Check + fan Active Test + injector coding & pilot learning.
+
+**Next session = on the borrowed laptop.** git pull, then Claude reads
+WINDOWS-LAPTOP-START-HERE.md and drives the direct install. The crack + cable are
+already proven, so this is lower-risk than going in blind.
+
+---
+
 ## 2026-06-30 (cont. 2) — VT-x was already ON; hardened VM built + boot-tested
 
 **Correction:** the earlier "enable VT-x in BIOS" ask was a MISTAKE. `Win32_Processor.
