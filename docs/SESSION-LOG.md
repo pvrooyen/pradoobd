@@ -5,6 +5,35 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-06-30 (cont. 2) — VT-x was already ON; hardened VM built + boot-tested
+
+**Correction:** the earlier "enable VT-x in BIOS" ask was a MISTAKE. `Win32_Processor.
+VirtualizationFirmwareEnabled=False` is an unreliable flag — it reads False whenever
+Windows VBS/Hyper-V already holds the virtualization extensions. VT-x was **enabled
+all along**. Verified authoritatively: `systeminfo` ("a hypervisor has been
+detected"), `HyperVisorPresent=True`, and actually starting a hvm VirtualBox VM
+(`VMState=running`). No BIOS change was ever needed. Lesson: to check VT-x, use
+systeminfo/HyperVisorPresent or just start a VM — never that WMI flag.
+
+**Built the sandbox VM (autonomous):** `techstream-sandbox` in VirtualBox —
+4GB RAM, 2 CPU, EFI, 61GB disk, Win11 ISO attached to boot, clipboard + drag-drop
+disabled, **NIC=none** (fully offline for the clean baseline + Run #1 detonation;
+attach a fake-net manually for Run #2). **Boot-tested OK** (VMState=running). Build
+script: `C:\_dev\pradoobd-sandbox\build-vm.ps1` (also copied to `docs/build-vm.ps1`
+for the borrowed laptop). Gotchas fixed: `--tpm-type` not `--tpm-version`;
+`--nic1 none` (a bare `hostonly` with no named adapter errors on boot);
+`$ErrorActionPreference=Continue` so a benign VBox stderr doesn't abort.
+
+**Autonomous runway ends here.** Remaining steps need a human at the VirtualBox GUI
+window (can't be driven from a shell): (1) install Windows 11 in the VM — click
+through setup, use the TPM/SecureBoot bypass, LOCAL account, no real logins; (2)
+copy in `guest-tools\SysinternalsSuite.zip`, take a `clean-baseline` snapshot, NO
+Guest Additions; (3) download Techstream V16.20.023 in the VM browser; (4) run the
+two-stage detonation per `docs/TECHSTREAM-SANDBOX-VETTING.md`. Do this here (Pierre
+at the desktop VirtualBox window) or on the borrowed laptop.
+
+---
+
 ## 2026-06-30 (cont.) — scope = full diagnostics + coding; cracked route + VM sandbox
 
 **Scope change:** not aircon-only. **Aircon is FIXED**; remaining jobs are (1) **cooling
