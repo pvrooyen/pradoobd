@@ -32,13 +32,22 @@ Remove-Item (Join-Path $dir $name) -Recurse -Force -ErrorAction SilentlyContinue
 & $vbox modifyvm $name --nic1 none
 & $vbox modifyvm $name --clipboard-mode disabled --draganddrop disabled
 
-# Disk + storage.
-$vdi = Join-Path $dir (Join-Path $name "$name.vdi")
+# USB passthrough for the Mini-VCI (needs the Extension Pack installed):
+#   VBoxManage extpack install --accept-license=<hash> Oracle_VirtualBox_Extension_Pack-<ver>.vbox-extpack
+& $vbox modifyvm $name --usb-xhci on
+& $vbox usbfilter add 0 --target $name --name "Mini-VCI" --vendorid 0403 --productid 6001
+
+# Disk + storage: 3 SATA ports = system disk, Win11 install ISO, autounattend VISO.
+$vdi   = Join-Path $dir (Join-Path $name "$name.vdi")
+$aviso = 'C:\_dev\pradoobd-sandbox\autounattend\unattend.viso'  # maps autounattend.xml into a virtual CD
 & $vbox createmedium disk --filename $vdi --size 61440 --format VDI
-& $vbox storagectl $name --name SATA --add sata --controller IntelAhci --portcount 2
+& $vbox storagectl $name --name SATA --add sata --controller IntelAhci --portcount 3
 & $vbox storageattach $name --storagectl SATA --port 0 --device 0 --type hdd --medium $vdi
 & $vbox storageattach $name --storagectl SATA --port 1 --device 0 --type dvddrive --medium $iso
+& $vbox storageattach $name --storagectl SATA --port 2 --device 0 --type dvddrive --medium $aviso
+& $vbox modifyvm $name --boot1 dvd --boot2 disk --boot3 none --boot4 none
 
-Write-Output ("VM {0} created and hardened. Boot it to install Windows 11." -f $name)
-Write-Output 'Reminders: local account only, no real logins; copy in Sysinternals; no Guest Additions;'
-Write-Output 'download the crack in the VM browser; snapshot clean; see TECHSTREAM-SANDBOX-VETTING.md.'
+Write-Output ("VM {0} created + hardened + autounattend attached." -f $name)
+Write-Output 'Start it (startvm --type gui), then send Enter (keyboardputscancode 1c 9c) at the'
+Write-Output '"Press any key to boot from CD" prompt so Setup runs unattended. NO Guest Additions.'
+Write-Output 'After first boot: snapshot clean, then follow docs/TECHSTREAM-SANDBOX-VETTING.md.'
