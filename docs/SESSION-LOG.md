@@ -5,6 +5,49 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-08-13 — Pulled Pel Car ownership file; oil-light consult; 1500 km trip is a go
+
+**Scope change:** this project is now the whole Prado, not just the OBD tool.
+Ownership / purchase / workshop history lives in Google Drive:
+`C:\Users\pierr\My Drive\Projects\Claude\Projects\Pel Car\listings\02-prado-2005-white\`
+(notes.md, mechanic-report.md, BRIEFING.md). Search is closed — Pel bought the
+car ~2026-06-11. Plate ACZ 676 MC, chassis KDJ120-0072377, 1KD-1391817 Euro III.
+
+**Today's topic (only):** yellow oil light + oil leak, and whether a **1500 km**
+drive to diagnose/fix is acceptable.
+
+**Verdict:** drive it. Warm-only light (never from cold, on after a few km) on a
+1KD is level / thin oil / sender — not a dying bottom end. Keep oil on the stick
+every fuel stop; 5 L of diesel oil in the back. Expected extra damage if level is
+held: none you will feel.
+
+**Yellow, not red:** a 120 Prado oil-**pressure** lamp is **red** (oil-can).
+Yellow/amber is almost certainly **A/T oil temp** (the ATF cooler is in the
+radiator that was opened 1 Jun) or a misread MIL. Confirm the symbol once in the
+shade. Engine leak and this light may be two separate things.
+
+**Fuel (current):** ~6 L / 50 km. Official gasóleo **116.25 MZN/L** (Petromoc,
+still current 10 Aug 2026; Inhambane a couple of Mt higher). **~700 MZN / 50 km.**
+1500 km budget ~180–210 L.
+
+**Lessons learned**
+- Read the Pel Car ownership folder before diagnosing; the repo session log was
+  six weeks behind the car.
+- On this cluster, colour of the lamp matters more than the word “oil.” Red
+  oil-can = stop. Amber after a few km after radiator work = think gearbox temp.
+- A 1KD with oil in the sump will do a long tar run on a warm-only warning.
+  The trip-killing risk is an emptying leak nobody checks, or a knock you ignore.
+- Consult like a mechanic: one topic, a verdict, then stop. Don’t reopen fans /
+  keys / injectors when the user scoped oil.
+
+**Next:** glance the dash symbol (red can vs A/T OIL TEMP). Dipstick every stop
+on the 1500 km. On arrival: find the leak, change oil if it smells of diesel,
+then the rest of the backlog (keys, fans, springs, injector codes).
+
+No code changes this session.
+
+---
+
 ## 2026-07-01 — VM route PROVED the crack works, then BROKE the desktop; pivot to direct-on-laptop
 
 **Big result AND a serious incident.** Built a hardened VirtualBox VM, unattended-

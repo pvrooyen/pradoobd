@@ -104,9 +104,15 @@ UI; the watcher + capture files are the main path. The browser UI is optional.
 - The ELM327 is one-command-at-a-time; `ElmWifiTransport` serializes sends via an
   internal queue and frames responses on the `>` prompt. Don't parallelize sends.
 
-## State of things (as of handoff)
+## State of things (as of 2026-08-13)
 
-- Full scaffold built, typechecks, builds, and passes the WS smoke test in mock.
-- NOT yet tested against the real car — the next step is the user's first live
-  `npm run capture` at the Prado.
-- No Toyota Mode 22 PID is confirmed yet — all provisional.
+- Pel **owns** the Prado (bought ~2026-06-11). Whole-car notes:
+  `C:\Users\pierr\My Drive\Projects\Claude\Projects\Pel Car\listings\02-prado-2005-white\`
+- ELM327 WiFi clone **cannot** init this car's K-line. Path is Mini-VCI + Techstream
+  on the borrowed Windows laptop. Never yet scanned at the car.
+- **2026-08-13 consult:** yellow oil light + leak. 1500 km trip approved if dipstick
+  is checked every fuel stop. Yellow ≠ oil pressure (that's red); likely A/T temp.
+  See `docs/SESSION-LOG.md`.
+- Open backlog (not today's topic): stolen keys still live, fans not spinning,
+  front sitting low, injectors uncoded, windows dead, timing-belt receipts unknown.
+- No Toyota Mode 22 PID is confirmed — all provisional. Scaffold builds; mock OK.
