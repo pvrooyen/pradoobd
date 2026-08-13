@@ -5,9 +5,10 @@ your onboarding. Read it, then `README.md`, then the other `docs/`.
 
 ## What this project is
 
-A bespoke web-based OBD-II diagnostic tool for **Pierre's 2005 Toyota Land
-Cruiser Prado (120-series, 1KD-FTV 3.0L D-4D diesel)**, driving a generic
-**ELM327 WiFi** adapter (default `192.168.0.10:35000`) from Chrome.
+A bespoke diagnostic assistant for **Pierre's 2005 Toyota Land Cruiser Prado
+(120-series, 1KD-FTV 3.0L D-4D diesel)** — the whole car, not only the scan
+tool. Vehicle history is in `docs/vehicle/`. The repo also has a web OBD-II
+bridge for a generic **ELM327 WiFi** adapter (default `192.168.0.10:35000`).
 
 Built as an extensible **OBD platform**: the adapter sits behind a `Transport`
 interface (`packages/server/src/transport/Transport.ts`) so future
@@ -106,8 +107,7 @@ UI; the watcher + capture files are the main path. The browser UI is optional.
 
 ## State of things (as of 2026-08-13)
 
-- Pel **owns** the Prado (bought ~2026-06-11). Whole-car notes:
-  `C:\Users\pierr\My Drive\Projects\Claude\Projects\Pel Car\listings\02-prado-2005-white\`
+- Pel **owns** the Prado (bought ~2026-06-11). Vehicle file: `docs/vehicle/`.
 - ELM327 WiFi clone **cannot** init this car's K-line. Path is Mini-VCI + Techstream
   on the borrowed Windows laptop. Never yet scanned at the car.
 - **2026-08-13 consult:** yellow oil light + leak. 1500 km trip approved if dipstick

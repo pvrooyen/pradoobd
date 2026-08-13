@@ -5,13 +5,13 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
-## 2026-08-13 — Pulled Pel Car ownership file; oil-light consult; 1500 km trip is a go
+## 2026-08-13 — Oil-light consult; 1500 km trip is a go; vehicle file imported
 
-**Scope change:** this project is now the whole Prado, not just the OBD tool.
-Ownership / purchase / workshop history lives in Google Drive:
-`C:\Users\pierr\My Drive\Projects\Claude\Projects\Pel Car\listings\02-prado-2005-white\`
-(notes.md, mechanic-report.md, BRIEFING.md). Search is closed — Pel bought the
-car ~2026-06-11. Plate ACZ 676 MC, chassis KDJ120-0072377, 1KD-1391817 Euro III.
+**Scope:** this project is the whole Prado, not just the OBD tool. Search is
+closed — Pel bought the car ~2026-06-11. Plate ACZ 676 MC, chassis
+KDJ120-0072377, 1KD-1391817 Euro III. Vehicle history lives in `docs/vehicle/`
+(imported once from the old Pel Car Drive folder, which is deprecated / will be
+deleted). Do not look for Pel Car again.
 
 **Today's topic (only):** yellow oil light + oil leak, and whether a **1500 km**
 drive to diagnose/fix is acceptable.
@@ -31,8 +31,6 @@ still current 10 Aug 2026; Inhambane a couple of Mt higher). **~700 MZN / 50 km.
 1500 km budget ~180–210 L.
 
 **Lessons learned**
-- Read the Pel Car ownership folder before diagnosing; the repo session log was
-  six weeks behind the car.
 - On this cluster, colour of the lamp matters more than the word “oil.” Red
   oil-can = stop. Amber after a few km after radiator work = think gearbox temp.
 - A 1KD with oil in the sump will do a long tar run on a warm-only warning.
