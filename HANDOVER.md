@@ -1,29 +1,41 @@
-﻿# HANDOVER — OpenMVCI cable test
+﻿# HANDOVER — orders to the next Grok
 
-OpenMVCI Mini-VCI K-line test on the 2005 Prado diesel. No cracked Techstream. No TIS until VIN and/or DTCs print.
+You are on Pierre's HP Chromebook x360 14-da (board SONA). He types little. Do the work. Do not send him through Recovery. Chrome OS Linux (Crostini) is already on.
 
-Crostini is `lsusb` only. This file is for Mint live after clone.
+Goal: OpenMVCI Mini-VCI K-line test on the 2005 Prado diesel. No cracked Techstream. No TIS until VIN and/or DTCs print.
 
-## After clone
+## 1. Find the cable now
+
+Search for the Mini-VCI. Do all of this without asking him to wander Settings unless a click only he can do is required:
+
+- Chrome OS Settings → Linux → USB → share the Mini-VCI / FTDI device to Linux
+- `lsusb` — look for `0403:6001` or `0403:6010`
+- `dmesg -T | tail -80` and `ls -l /dev/ttyUSB* /dev/ttyACM*`
+- Try both IDs. Unplug/replug once, share again, recheck
+
+If found: build and run immediately (ignition ON if he is at the truck):
 
 ```bash
-cd pradoobd/openmvci
 sudo apt update
 sudo apt install -y git cmake g++ pkg-config libusb-1.0-0-dev
+cd ~/pradoobd/openmvci 2>/dev/null || cd openmvci
 cmake -S . -B build -DBUILD_SHARED_LIBS=ON
 cmake --build build -j"$(nproc)"
-lsusb
 ./build/dtc_reader --read --device 0403:6001
 ```
 
-Ignition ON. Expect `0403:6001` or `0403:6010`. Try `--device 0403:6010` if the first ID is missing.
+If that ID is missing, use `--device 0403:6010`. VIN and/or DTCs (or a clean no-DTC list) = pass. Stop. Cable talks.
 
-## Pass / fail
+## 2. If not found: enable Mint boot for next restart
 
-- Pass: VIN and/or DTCs print (or a clean no-DTC list). Cable talks.
-- Fail: no USB ID, or no VIN/DTCs.
+He has been in developer mode for weeks. Do NOT Esc+Refresh+Ctrl+D. That powerwashes. Do NOT install UEFI Full ROM. Do NOT open the laptop.
 
-## Next
+Prefer, in this order:
 
-- Pass: stop. Cable is proven. TIS is allowed to consider after this.
-- Fail: other USB ID, then Windows at the truck last. Still no VIN/DTCs = do not buy TIS.
+1. Real Chrome OS shell (`chronos`) if you can reach it: `sudo crossystem dev_boot_usb=1 dev_boot_legacy=1`
+2. Else VT2 at the login screen: Ctrl+Alt+Right-arrow, login `chronos` (no password), then the same `crossystem` line
+3. Else only: `cd; curl -LOf https://mrchromebox.tech/firmware-util.sh && sudo bash firmware-util.sh` — option 1 RW_LEGACY only
+
+Tell him the next restart: Mint USB in, at OS verification is OFF press **Ctrl+L** (not Ctrl+U), Esc, pick USB. Then clone this repo again and say: continue as per HANDOVER.md
+
+No Windows PC. He stays on this Chromebook.
