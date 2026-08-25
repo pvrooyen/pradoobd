@@ -28,3 +28,7 @@ Thumbs.db
 .env.local
 .env.*.local
 !.env
+
+# OpenMVCI local build
+openmvci/build/
+
