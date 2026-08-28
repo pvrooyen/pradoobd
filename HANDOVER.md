@@ -1,5 +1,9 @@
 ﻿# HANDOVER — orders to the next Grok
 
+> **On Elvera's Windows laptop?** Ignore the Chromebook section below. Read
+> [`docs/ELVERA-MACHINE.md`](docs/ELVERA-MACHINE.md) and activate OBD tests
+> (`npm run watch:mock`). Paste prompt is at the top of that file.
+
 You are on Pierre's HP Chromebook x360 14-da (board SONA). He types little. Do the work. Do not send him through Recovery. Chrome OS Linux (Crostini) is already on.
 
 Goal: OpenMVCI Mini-VCI K-line test on the 2005 Prado diesel. No cracked Techstream. No TIS until VIN and/or DTCs print.

@@ -5,6 +5,23 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-08-28 — Handover: OBD tests on Elvera's Windows laptop
+
+**Scope:** get this repo runnable on Elvera's machine so Grok there can take over.
+No car session today. Desktop (MSI PierrePC) only wrote docs + commit.
+
+**What "active" means:** `npm run watch:mock` writes `captures/prado-*.md` and
+exits. That proves Node + the capture stack. Live ELM327 on this 2005 1KD still
+cannot init K-line (2026-06-04). Mini-VCI / OpenMVCI / Techstream stay later.
+
+**Docs:** `docs/ELVERA-MACHINE.md` (paste-prompt + steps). Pointers in
+`CLAUDE.md`, `HANDOVER.md`, `README.md`, `docs/SETUP-NEW-MACHINE.md`.
+
+**Next:** Pierre `git pull` on Elvera's laptop, paste the prompt from
+`docs/ELVERA-MACHINE.md` into Grok there. That Grok runs install/build/mock.
+
+---
+
 ## 2026-08-13 — Oil-light consult; 1500 km trip is a go; vehicle file imported
 
 **Scope:** this project is the whole Prado, not just the OBD tool. Search is

@@ -16,18 +16,17 @@ Everything needed to run this is in the repo. After cloning:
 
 ## Get the code onto the laptop
 
-Pick whichever applies (the repo is currently **local-only** on the desktop — no
-remote yet; see README "Repo / getting the code" for how to create one):
+**Elvera's Windows laptop:** follow [`ELVERA-MACHINE.md`](ELVERA-MACHINE.md)
+(Grok runs it; Pierre types nothing).
 
 ```powershell
-# If you pushed it to GitHub:
-git clone <your-repo-url> pradoobd
-cd pradoobd
-
-# Or if you copied the folder across (USB / network share):
-#   just copy C:\_dev\pradoobd — but DELETE node_modules and packages/*/dist
-#   first so you install fresh on the laptop.
+git clone https://github.com/pvrooyen/pradoobd.git C:\Projects\pradoobd
+cd C:\Projects\pradoobd
 ```
+
+If the folder already exists: `git pull origin main` from inside it. If you
+copied the folder on a USB, delete `node_modules` and `packages/*/dist` first
+and run `npm install` fresh.
 
 ## Install + verify
 

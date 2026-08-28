@@ -1,5 +1,8 @@
 # CLAUDE.md — instructions for Claude Code sessions in this repo
 
+> 🪟 **On Elvera's Windows laptop to get OBD tests running?** Read
+> **`docs/ELVERA-MACHINE.md` first** (paste-prompt at the top). Then this file.
+>
 > 🪟 **On a Windows laptop to run Techstream?** Read
 > **`docs/WINDOWS-LAPTOP-START-HERE.md` first**. Then this file and
 > `docs/CLAUDE-CONTEXT.md` for background. Vehicle history: `docs/vehicle/`.

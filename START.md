@@ -12,6 +12,7 @@ VIN printed or DTCs listed = the cable talks. Then you can consider TIS. Not bef
 | Machine | Role |
 | --- | --- |
 | **Windows desktop** | Create and commit the project. Drive sync + `git push`. No truck needed. |
+| **Elvera's Windows laptop** | Software OBD tests (`npm run watch:mock`). See `docs/ELVERA-MACHINE.md`. Mini-VCI OpenMVCI on this machine is last-resort if Mint live cannot see the adapter. |
 | **Mint live USB on the HP x360** | Real portable test at the Prado. Use this. |
 | **Crostini (ChromeOS Linux)** | 30-second check only. FTDI passthrough usually fails. If `lsusb` shows nothing, stop and boot Mint live. |
 | **Windows at the truck** | Last resort if Mint live cannot see the adapter. |
