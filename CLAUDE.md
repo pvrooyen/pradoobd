@@ -1,5 +1,9 @@
 # CLAUDE.md — instructions for Claude Code sessions in this repo
 
+> 🪟 **Free Mini-VCI work (USB, stay on WiFi, no TIS yet)?** Follow
+> **`docs/FREE-MINIVCI.md` only** (paste-prompt at the top). That file is the
+> full plan. Then this file for repo conventions.
+>
 > 🪟 **On Elvera's Windows laptop to get OBD tests running?** Read
 > **`docs/ELVERA-MACHINE.md` first** (paste-prompt at the top). Then this file.
 >

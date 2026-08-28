@@ -1,5 +1,8 @@
 ﻿# START — OpenMVCI cable test (2005 Prado diesel)
 
+> Full free Mini-VCI plan after this cable proof (live PIDs, K-line, Mode 22,
+> write flags gated): **`docs/FREE-MINIVCI.md`**. Point a new session there.
+
 Prove the Mini-VCI K-line talks **before** any TIS spend. Free OpenMVCI only. No cracked Techstream.
 
 Folder: `C:\Users\pierr\My Drive\Projects\pradoobd`  
