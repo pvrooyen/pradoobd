@@ -6,33 +6,21 @@ nothing. You run every command. Report outcomes, not runbooks.
 Repo: `https://github.com/pvrooyen/pradoobd.git`  
 Preferred folder: `C:\Projects\pradoobd`
 
-Paste this into Grok on that machine (then Grok follows the rest of this file):
+Pierre only does this:
+
+```powershell
+git clone https://github.com/pvrooyen/pradoobd.git C:\Projects\pradoobd
+```
+
+If that folder already exists: `git pull` inside it instead.
+
+Then he types this into Grok (nothing else):
 
 ```
-You are on Elvera's Windows laptop. Pierre types nothing. You run every command.
-
-Read docs/ELVERA-MACHINE.md first, then CLAUDE.md and docs/CLAUDE-CONTEXT.md.
-
-Goal: OBD tests ACTIVE on this machine.
-
-1. Install Git and Node.js ≥ 20 if missing (winget is fine). Do not install VirtualBox or any hypervisor.
-2. If C:\Projects\pradoobd exists: git pull origin main. Else: git clone https://github.com/pvrooyen/pradoobd.git C:\Projects\pradoobd
-3. cd C:\Projects\pradoobd
-4. npm install
-5. npm run build
-6. npm run watch:mock
-   Ready = it prints "✔ capture written" and "(mock) one capture done — exiting." and a new file exists under captures/.
-7. Optional extra: $env:MOCK="1"; npm start  (background) then  node packages/server/smoke-test.mjs  then stop the server.
-
-Tell Pierre "ready" with the capture filename. Then wait. Do not go to the car until he says so.
-
-Hard rules:
-- Do not wipe Linux on this disk.
-- Do not install VirtualBox / Hyper-V / USB-filter drivers.
-- Do not flash Mini-VCI firmware. Device Info only, later, if we get that far.
-- Do not use the mini-CD that shipped with the cable.
-- The cheap ELM327 WiFi clone cannot init this 2005 Prado's K-line (proven). Mock proves OUR software. A live ELM327 capture is expected to fail the same way. Real cable talk is Mini-VCI + OpenMVCI later — not today unless he asks.
+Follow docs/ELVERA-MACHINE.md
 ```
+
+You (Grok) then run the rest of this file. Pierre types nothing more.
 
 ---
 
