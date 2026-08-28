@@ -2,8 +2,10 @@
 #include <doctest/doctest.h>
 
 #include <cstring>
+#include <string>
 
 #include "mvci/api.hpp"
+#include "mvci/uds.hpp"
 
 TEST_CASE("MVCI (J2534-compat) API smoke (loopback simulation removed; error paths)") {
   mvci::DeviceHandle deviceId = 0;
@@ -27,4 +29,12 @@ TEST_CASE("MVCI (J2534-compat) API smoke (loopback simulation removed; error pat
 
   (void)MVCI_Disconnect(channelId);
   (void)MVCI_CloseDevice(deviceId);
+}
+
+TEST_CASE("J2534 protocol IDs match SAE") {
+  CHECK(mvci::PROTOCOL_ISO9141 == 0x0003U);
+  CHECK(mvci::PROTOCOL_ISO14230 == 0x0004U);
+  CHECK(mvci::PROTOCOL_CAN == 0x0005U);
+  CHECK(mvci::PROTOCOL_ISO15765 == 0x0006U);
+  CHECK(std::string(mvci::protocolName(mvci::PROTOCOL_ISO14230)) == "ISO14230");
 }

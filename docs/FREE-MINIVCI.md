@@ -3,10 +3,12 @@
 Paste this into the next session (nothing else):
 
 ```
-Follow docs/FREE-MINIVCI.md
+Follow docs/LAPTOP-NOW.md
 ```
 
-This file is the **full plan**. Do the work it orders. Do **not** invent a second plan.
+**Now file (Windows laptop):** [`docs/LAPTOP-NOW.md`](LAPTOP-NOW.md). This file is the **full plan**. Do the work it orders. Do **not** invent a second plan.
+
+**Already done on PierrePC (2026-08-28):** write gate, Windows serial (no libusb), `--open-only`, ISO15765→ISO14230→ISO9141 fallback in `dtc_reader`, write stubs, unit tests. **Not done:** cable on a machine, VIN/DTC at the Prado, live/Mode 22 capture writer.
 
 - **Pierre types nothing** except that line (and physical steps at the car).
 - **You run every command.** Report outcomes, not runbooks.

@@ -18,6 +18,8 @@ constexpr Status ERR_TIMEOUT = -6;
 constexpr Status ERR_BUFFER_EMPTY = -7;
 constexpr Status ERR_NOT_SUPPORTED = -8;
 
+constexpr std::uint32_t PROTOCOL_ISO9141 = 0x0003;
+constexpr std::uint32_t PROTOCOL_ISO14230 = 0x0004;
 constexpr std::uint32_t PROTOCOL_CAN = 0x0005;
 constexpr std::uint32_t PROTOCOL_ISO15765 = 0x0006;
 
@@ -34,6 +36,9 @@ constexpr std::uint32_t IOCTL_GET_CONFIG = 0x0002;
 constexpr std::uint32_t IOCTL_CLEAR_RX_BUFFER = 0x0003;
 constexpr std::uint32_t IOCTL_CLEAR_TX_BUFFER = 0x0004;
 constexpr std::uint32_t IOCTL_READ_BATT_VOLTAGE = 0x0005;
+// Extra IDs (do not reuse 0x01–0x05; those already mean other things in this tree).
+constexpr std::uint32_t IOCTL_FIVE_BAUD_INIT = 0x0006;
+constexpr std::uint32_t IOCTL_FAST_INIT = 0x0007;
 
 constexpr std::uint32_t CONFIG_BAUDRATE = 0x0100;
 

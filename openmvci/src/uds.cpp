@@ -260,6 +260,69 @@ Status sendUdsRequest(ChannelHandle channelId,
   return sendUdsRequestWithId(channelId, request, responses, timeoutMs, /*override*/ 0U);
 }
 
+std::vector<std::uint8_t> buildKwpStartCommunication() {
+  // ISO 14230 startCommunication, target 0x10 (Toyota engine), tester 0xF1, + checksum.
+  return {0x81U, 0x10U, 0xF1U, 0x81U, 0x03U};
+}
+
+const char* protocolName(std::uint32_t protocolId) {
+  switch (protocolId) {
+    case PROTOCOL_ISO9141:
+      return "ISO9141";
+    case PROTOCOL_ISO14230:
+      return "ISO14230";
+    case PROTOCOL_CAN:
+      return "CAN";
+    case PROTOCOL_ISO15765:
+      return "ISO15765";
+    default:
+      return "unknown";
+  }
+}
+
+Status sendRawRequest(ChannelHandle channelId,
+                      std::uint32_t protocolId,
+                      const std::vector<std::uint8_t>& request,
+                      std::vector<std::vector<std::uint8_t>>& responses,
+                      std::uint32_t timeoutMs) {
+  responses.clear();
+  if (request.empty()) {
+    return ERR_INVALID_MSG;
+  }
+
+  PassThruMsg msg{};
+  msg.protocolId = protocolId;
+  msg.dataSize = static_cast<std::uint32_t>(std::min<std::size_t>(request.size(), sizeof(msg.data)));
+  std::copy_n(request.begin(), msg.dataSize, msg.data);
+
+  std::uint32_t count = 1;
+  const auto writeStatus = PassThruWriteMsgs(channelId, &msg, &count, 1000);
+  if (writeStatus != STATUS_NOERROR) {
+    return writeStatus;
+  }
+
+  const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
+  while (true) {
+    PassThruMsg rx{};
+    std::uint32_t rxCount = 1;
+    const auto now = std::chrono::steady_clock::now();
+    const auto remaining = now >= deadline ? 0U : static_cast<std::uint32_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count());
+    const auto readStatus = PassThruReadMsgs(channelId, &rx, &rxCount, remaining);
+    if (readStatus == ERR_TIMEOUT) {
+      break;
+    }
+    if (readStatus != STATUS_NOERROR) {
+      return readStatus;
+    }
+    responses.emplace_back(rx.data, rx.data + rx.dataSize);
+    if (remaining == 0U) {
+      break;
+    }
+  }
+  return responses.empty() ? ERR_TIMEOUT : STATUS_NOERROR;
+}
+
 Status parseActiveDtcResponses(const std::vector<std::vector<std::uint8_t>>& responses,
                                std::vector<DtcRecord>& dtcs,
                                std::uint8_t statusMask) {

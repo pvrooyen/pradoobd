@@ -23,6 +23,15 @@ MVCI_CPP_API Status sendUdsRequest(ChannelHandle channelId,
                                    std::vector<std::vector<std::uint8_t>>& responses,
                                    std::uint32_t timeoutMs);
 
+MVCI_CPP_API Status sendRawRequest(ChannelHandle channelId,
+                                   std::uint32_t protocolId,
+                                   const std::vector<std::uint8_t>& request,
+                                   std::vector<std::vector<std::uint8_t>>& responses,
+                                   std::uint32_t timeoutMs);
+
+MVCI_CPP_API std::vector<std::uint8_t> buildKwpStartCommunication();
+MVCI_CPP_API const char* protocolName(std::uint32_t protocolId);
+
 MVCI_CPP_API Status parseActiveDtcResponses(const std::vector<std::vector<std::uint8_t>>& responses,
                                             std::vector<DtcRecord>& dtcs,
                                             std::uint8_t statusMask);

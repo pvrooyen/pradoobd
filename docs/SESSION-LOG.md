@@ -5,6 +5,20 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-08-28 — Free Mini-VCI: Windows serial + write gate (PierrePC)
+
+**Scope:** implement FREE-MINIVCI phases 1–2 on the desktop. No car. Cable not plugged in here.
+
+**Built:** `--clear` dual-flag gate; Windows FTDI serial (`CreateFile` / no libusb); `dtc_reader --open-only`; protocol fallback ISO15765 → ISO14230 → ISO9141; write stubs; tests (6/6 Release). `--clear` without `--i-understand-this-writes` prints `WRITE BLOCKED` and does not open the port.
+
+**Desk `--open-only`:** `no FTDI Mini-VCI COM port` — expected; nothing on USB.
+
+**Not built:** live PIDs / Mode 22 capture writer (waits until the cable talks).
+
+**Next:** Elvera’s Windows laptop. Paste `Follow docs/LAPTOP-NOW.md`. That Grok pulls, builds, plugs the cable, `--open-only`, then `--read` at the Prado. No TIS this week.
+
+---
+
 ## 2026-08-28 — Handover: OBD tests on Elvera's Windows laptop
 
 **Scope:** get this repo runnable on Elvera's machine so Grok there can take over.

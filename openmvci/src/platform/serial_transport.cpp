@@ -1,12 +1,11 @@
 #include "mvci/platform/transport.hpp"
 
 #include "mvci/platform/frame_resync.hpp"
+#include "mvci/platform/serial_native.hpp"
 
-#include <fcntl.h>
-#include <termios.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
+#ifndef _WIN32
 #include <dirent.h>
+#endif
 
 #include <algorithm>
 #include <atomic>
@@ -19,10 +18,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-#if defined(__APPLE__)
-#include <IOKit/serial/ioss.h>
-#endif
 
 namespace mvci {
 namespace {
@@ -86,18 +81,6 @@ void serialInfo(const char* msg) {
   std::fprintf(stderr, "[mvci serial] %s\n", msg);
 }
 
-speed_t standardBaud(unsigned int rate) {
-  switch (rate) {
-    case 9600:   return B9600;
-    case 19200:  return B19200;
-    case 38400:  return B38400;
-    case 57600:  return B57600;
-    case 115200: return B115200;
-    case 230400: return B230400;
-    default:     return 0;
-  }
-}
-
 unsigned int desiredBaud() {
   return static_cast<unsigned int>(ulongEnv("MVCI_SERIAL_BAUD", 500000UL));
 }
@@ -124,28 +107,18 @@ bool ctrlModeUserConfigured() {
   return value && value[0] != '\0';
 }
 
-void setModemBits(int fd, bool dtr, bool rts) {
-  int modem = 0;
-  if (::ioctl(fd, TIOCMGET, &modem) != 0) {
-    return;
-  }
-  if (dtr) modem |= TIOCM_DTR; else modem &= ~TIOCM_DTR;
-  if (rts) modem |= TIOCM_RTS; else modem &= ~TIOCM_RTS;
-  (void)::ioctl(fd, TIOCMSET, &modem);
-}
-
-void applyCtrlMode(int fd, CtrlMode mode) {
+void applyCtrlMode(serial_native::Handle h, CtrlMode mode) {
   switch (mode) {
     case CtrlMode::Assert:
-      setModemBits(fd, true, true);
+      serial_native::setModem(h, true, true);
       return;
     case CtrlMode::None:
-      setModemBits(fd, false, false);
+      serial_native::setModem(h, false, false);
       return;
     case CtrlMode::Pulse:
-      setModemBits(fd, false, false);
+      serial_native::setModem(h, false, false);
       std::this_thread::sleep_for(std::chrono::milliseconds(120));
-      setModemBits(fd, true, true);
+      serial_native::setModem(h, true, true);
       std::this_thread::sleep_for(std::chrono::milliseconds(120));
       return;
   }
@@ -199,6 +172,7 @@ bool tryDecodeObfuscatedIcvm(std::vector<std::uint8_t>& bytes) {
 
 std::vector<std::string> findSerialNodes() {
   std::vector<std::string> nodes;
+#ifndef _WIN32
   DIR* dir = ::opendir("/dev");
   if (!dir) {
     return nodes;
@@ -215,6 +189,7 @@ std::vector<std::string> findSerialNodes() {
   ::closedir(dir);
   std::sort(nodes.begin(), nodes.end());
   nodes.erase(std::unique(nodes.begin(), nodes.end()), nodes.end());
+#endif
   return nodes;
 }
 
@@ -235,22 +210,18 @@ std::string pickReenumeratedNode(const std::string& originalPath) {
   return nodes.front();
 }
 
-int openSerialNode(const std::string& initialPath, std::string& openedPath) {
+serial_native::Handle openSerialNode(const std::string& initialPath, std::string& openedPath) {
   std::string currentPath = initialPath;
-  int lastErrno = 0;
   const auto start = std::chrono::steady_clock::now();
   for (;;) {
-    const int fd = ::open(currentPath.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
-    if (fd >= 0) {
+    const auto handle = serial_native::openPort(currentPath);
+    if (serial_native::isValid(handle)) {
       openedPath = currentPath;
-      return fd;
+      return handle;
     }
-    lastErrno = errno;
-    if (lastErrno == ENOENT || lastErrno == ETIMEDOUT || lastErrno == ENXIO || lastErrno == EIO) {
-      const auto alt = pickReenumeratedNode(initialPath);
-      if (!alt.empty() && alt != currentPath) {
-        currentPath = alt;
-      }
+    const auto alt = pickReenumeratedNode(initialPath);
+    if (!alt.empty() && alt != currentPath) {
+      currentPath = alt;
     }
     const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - start).count();
@@ -259,63 +230,17 @@ int openSerialNode(const std::string& initialPath, std::string& openedPath) {
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
   }
-  errno = lastErrno;
   openedPath.clear();
-  return -1;
+  return serial_native::kInvalid;
 }
 
-Status configurePort(int fd, unsigned int baud) {
-  termios tty{};
-  if (::tcgetattr(fd, &tty) != 0) {
-    slog("tcgetattr failed: %s", std::strerror(errno));
-    return ERR_FAILED;
+Status configurePort(serial_native::Handle handle, unsigned int baud) {
+  const bool rtscts = boolEnv("MVCI_SERIAL_RTSCTS", false);
+  const auto status = serial_native::configure(handle, baud, rtscts);
+  if (status != STATUS_NOERROR) {
+    slog("configurePort failed: %s", serial_native::lastErrorString().c_str());
   }
-
-  cfmakeraw(&tty);
-  tty.c_cflag |= (CLOCAL | CREAD);
-  tty.c_cflag &= ~CSIZE;
-  tty.c_cflag |= CS8;
-  tty.c_cflag &= ~PARENB;
-  tty.c_cflag &= ~CSTOPB;
-  if (boolEnv("MVCI_SERIAL_RTSCTS", false)) {
-    tty.c_cflag |= CRTSCTS;
-  } else {
-    tty.c_cflag &= ~CRTSCTS;
-  }
-  tty.c_cflag &= ~HUPCL;
-  tty.c_cc[VMIN] = 0;
-  tty.c_cc[VTIME] = 0;
-
-  const speed_t standard = standardBaud(baud);
-  if (standard != 0) {
-    cfsetispeed(&tty, standard);
-    cfsetospeed(&tty, standard);
-  } else {
-    cfsetispeed(&tty, B9600);
-    cfsetospeed(&tty, B9600);
-  }
-
-  if (::tcsetattr(fd, TCSANOW, &tty) != 0) {
-    slog("tcsetattr failed: %s", std::strerror(errno));
-    return ERR_FAILED;
-  }
-
-#if defined(__APPLE__)
-  if (standard == 0) {
-    const speed_t custom = static_cast<speed_t>(baud);
-    if (::ioctl(fd, IOSSIOSPEED, &custom) < 0) {
-      slog("IOSSIOSPEED %u failed: %s", baud, std::strerror(errno));
-      return ERR_FAILED;
-    }
-  }
-#else
-  if (standard == 0) {
-    slog("non-standard baud %u not supported on this platform", baud);
-  }
-#endif
-
-  ::tcflush(fd, TCIOFLUSH);
-  return STATUS_NOERROR;
+  return status;
 }
 
 // Mini-VCI handshake sequences (validated against MVCI32.dll USB capture):
@@ -430,19 +355,16 @@ public:
   Status open(const std::string& deviceName) override {
     close();
 
-    std::string path = deviceName;
-    if (constexpr const char* kPrefix = "serial:"; path.rfind(kPrefix, 0) == 0) {
-      path.erase(0, std::strlen(kPrefix));
-    }
-    if (path.empty() || path[0] != '/') {
+    std::string path = serial_native::normalizePortPath(deviceName);
+    if (!serial_native::looksLikeSerialPath(deviceName) && !serial_native::looksLikeSerialPath(path)) {
       slog("invalid serial path '%s'", path.c_str());
       return ERR_FAILED;
     }
 
     std::string openedPath;
-    fd_ = openSerialNode(path, openedPath);
-    if (fd_ < 0) {
-      slog("open('%s') failed: %s", path.c_str(), std::strerror(errno));
+    handle_ = openSerialNode(path, openedPath);
+    if (!serial_native::isValid(handle_)) {
+      slog("open('%s') failed: %s", path.c_str(), serial_native::lastErrorString().c_str());
       return ERR_FAILED;
     }
     if (!openedPath.empty() && openedPath != path) {
@@ -450,18 +372,10 @@ public:
       path = openedPath;
     }
     serialPath_ = path;
-
-    // Clear O_NONBLOCK so subsequent reads honor VMIN/VTIME via select.
-    const int flags = ::fcntl(fd_, F_GETFL, 0);
-    if (flags >= 0) {
-      ::fcntl(fd_, F_SETFL, flags & ~O_NONBLOCK);
-    }
-    if (::ioctl(fd_, TIOCEXCL) < 0) {
-      slog("TIOCEXCL failed on '%s': %s (continuing)", path.c_str(), std::strerror(errno));
-    }
+    serial_native::afterOpen(handle_);
 
     const auto baud = desiredBaud();
-    if (configurePort(fd_, baud) != STATUS_NOERROR) {
+    if (configurePort(handle_, baud) != STATUS_NOERROR) {
       closeFd();
       return ERR_FAILED;
     }
@@ -474,7 +388,7 @@ public:
 
       // If the very first bootstrap closed the fd (e.g. transient I/O error
       // during a port re-enumeration), reopen and retry once.
-      if (bootstrap != STATUS_NOERROR && fd_ < 0 && !serialPath_.empty()) {
+      if (bootstrap != STATUS_NOERROR && !serial_native::isValid(handle_) && !serialPath_.empty()) {
         slog("bootstrap aborted with closed fd; reopening '%s' and retrying",
              serialPath_.c_str());
         if (reopenFd()) {
@@ -501,7 +415,7 @@ public:
   }
 
   Status write(const std::vector<std::uint8_t>& packet) override {
-    if (!open_ || fd_ < 0) {
+    if (!open_ || !serial_native::isValid(handle_)) {
       return ERR_NOT_INITIALIZED;
     }
 
@@ -601,7 +515,7 @@ public:
   }
 
   Status read(std::vector<std::uint8_t>& packet, std::uint32_t timeoutMs) override {
-    if (!open_ || fd_ < 0) {
+    if (!open_ || !serial_native::isValid(handle_)) {
       return ERR_NOT_INITIALIZED;
     }
     packet.clear();
@@ -668,29 +582,26 @@ public:
   }
 
   void clearRx() override {
-    if (fd_ >= 0) ::tcflush(fd_, TCIFLUSH);
+    serial_native::flushRx(handle_);
     rxBuffer_.clear();
   }
   void clearTx() override {
-    if (fd_ >= 0) ::tcflush(fd_, TCOFLUSH);
+    serial_native::flushTx(handle_);
   }
 
 private:
 
   Status writeBytes(const std::vector<std::uint8_t>& packet) {
-    if (!open_ || fd_ < 0) {
+    if (!open_ || !serial_native::isValid(handle_)) {
       return ERR_NOT_INITIALIZED;
     }
-    std::size_t offset = 0;
-    while (offset < packet.size()) {
-      const auto written = ::write(fd_, packet.data() + offset, packet.size() - offset);
-      if (written < 0) {
-        if (errno == EINTR) continue;
-        if (tryRecoverDevice("write", errno)) continue;
-        slog("write failed: %s", std::strerror(errno));
-        return ERR_FAILED;
+    const auto status = serial_native::writeAll(handle_, packet.data(), packet.size());
+    if (status != STATUS_NOERROR) {
+      if (tryRecoverDevice("write")) {
+        return serial_native::writeAll(handle_, packet.data(), packet.size());
       }
-      offset += static_cast<std::size_t>(written);
+      slog("write failed: %s", serial_native::lastErrorString().c_str());
+      return ERR_FAILED;
     }
     if (verbose() && !packet.empty()) {
       slog("tx[%zu]: %s", packet.size(), hexString(packet).c_str());
@@ -700,42 +611,21 @@ private:
 
   Status readChunk(std::vector<std::uint8_t>& out, std::uint32_t timeoutMs) {
     out.clear();
-    if (fd_ < 0) {
+    if (!serial_native::isValid(handle_)) {
       return ERR_NOT_INITIALIZED;
     }
     for (int attempt = 0; attempt < 2; ++attempt) {
-      timeval tv{};
-      tv.tv_sec = static_cast<long>(timeoutMs / 1000U);
-      tv.tv_usec = static_cast<int>((timeoutMs % 1000U) * 1000U);
-
-      fd_set rfds;
-      FD_ZERO(&rfds);
-      FD_SET(fd_, &rfds);
-
-      const int ready = ::select(fd_ + 1, &rfds, nullptr, nullptr, &tv);
-      if (ready < 0) {
-        if (errno == EINTR) return ERR_TIMEOUT;
-        if (attempt == 0 && tryRecoverDevice("select", errno)) continue;
-        slog("select failed: %s", std::strerror(errno));
-        return ERR_FAILED;
-      }
-      if (ready == 0) {
+      const auto status = serial_native::readSome(handle_, out, timeoutMs);
+      if (status == ERR_TIMEOUT) {
         return ERR_TIMEOUT;
       }
-
-      unsigned char buffer[512];
-      const auto got = ::read(fd_, buffer, sizeof(buffer));
-      if (got < 0) {
-        if (errno == EINTR) return ERR_TIMEOUT;
-        if (attempt == 0 && tryRecoverDevice("read", errno)) continue;
-        slog("read failed: %s", std::strerror(errno));
+      if (status != STATUS_NOERROR) {
+        if (attempt == 0 && tryRecoverDevice("read")) {
+          continue;
+        }
+        slog("read failed: %s", serial_native::lastErrorString().c_str());
         return ERR_FAILED;
       }
-      if (got == 0) {
-        return ERR_TIMEOUT;
-      }
-
-      out.assign(buffer, buffer + got);
       if (tryDecodeObfuscatedIcvm(out)) {
         slog("decoded mini obfuscated icvm frame");
       }
@@ -756,39 +646,34 @@ private:
   bool reopenFd() {
     closeFd();
     std::string reopenedPath;
-    const int fd = openSerialNode(serialPath_, reopenedPath);
-    if (fd < 0) {
-      slog("reopen('%s') failed: %s", serialPath_.c_str(), std::strerror(errno));
+    const auto handle = openSerialNode(serialPath_, reopenedPath);
+    if (!serial_native::isValid(handle)) {
+      slog("reopen('%s') failed: %s", serialPath_.c_str(), serial_native::lastErrorString().c_str());
       return false;
     }
     if (!reopenedPath.empty() && reopenedPath != serialPath_) {
       slog("serial node moved from '%s' to '%s'", serialPath_.c_str(), reopenedPath.c_str());
       serialPath_ = reopenedPath;
     }
-    fd_ = fd;
-    const int flags = ::fcntl(fd_, F_GETFL, 0);
-    if (flags >= 0) {
-      ::fcntl(fd_, F_SETFL, flags & ~O_NONBLOCK);
-    }
-    (void)::ioctl(fd_, TIOCEXCL);
+    handle_ = handle;
+    serial_native::afterOpen(handle_);
     return true;
   }
 
-  bool tryRecoverDevice(const char* source, int err) {
-    if (err != ENODEV && err != ENXIO && err != EIO &&
-        err != ENOTCONN && err != EBADF) {
+  bool tryRecoverDevice(const char* source) {
+    if (!serial_native::isRecoverableIoError()) {
       return false;
     }
     if (serialPath_.empty()) {
       return false;
     }
-    slog("serial recover from %s after %s", source, std::strerror(err));
+    slog("serial recover from %s after %s", source, serial_native::lastErrorString().c_str());
     if (!reopenFd()) {
       return false;
     }
 
     const auto baud = currentBaud_ ? currentBaud_ : desiredBaud();
-    if (configurePort(fd_, baud) != STATUS_NOERROR) {
+    if (configurePort(handle_, baud) != STATUS_NOERROR) {
       slog("serial recover configure failed");
       closeFd();
       return false;
@@ -807,13 +692,13 @@ private:
   }
 
   Status bootstrapWithFallback(unsigned int configuredBaud, const char* source) {
-    if (fd_ < 0) {
+    if (!serial_native::isValid(handle_)) {
       return ERR_NOT_INITIALIZED;
     }
 
     auto tryWithCtrl = [&](CtrlMode mode) -> Status {
-      if (fd_ < 0) return ERR_NOT_INITIALIZED;
-      applyCtrlMode(fd_, mode);
+      if (!serial_native::isValid(handle_)) return ERR_NOT_INITIALIZED;
+      applyCtrlMode(handle_, mode);
       slog("serial ctrl mode: %s",
            mode == CtrlMode::Assert ? "assert" :
            mode == CtrlMode::Pulse  ? "pulse"  : "none");
@@ -821,29 +706,29 @@ private:
       if (bootstrap() == STATUS_NOERROR) {
         return STATUS_NOERROR;
       }
-      if (fd_ < 0) return ERR_NOT_INITIALIZED;
+      if (!serial_native::isValid(handle_)) return ERR_NOT_INITIALIZED;
 
       for (unsigned int alt : {500000U, 230400U, 115200U, 38400U}) {
-        if (alt == currentBaud_ || fd_ < 0) continue;
-        if (configurePort(fd_, alt) != STATUS_NOERROR) continue;
+        if (alt == currentBaud_ || !serial_native::isValid(handle_)) continue;
+        if (configurePort(handle_, alt) != STATUS_NOERROR) continue;
         currentBaud_ = alt;
         slog("%s retrying mini bootstrap at %u baud", source, alt);
         if (bootstrap() == STATUS_NOERROR) {
           slog("mini bootstrap succeeded at %u baud", alt);
           return STATUS_NOERROR;
         }
-        if (fd_ < 0) return ERR_NOT_INITIALIZED;
+        if (!serial_native::isValid(handle_)) return ERR_NOT_INITIALIZED;
       }
       return ERR_FAILED;
     };
 
-    if (configurePort(fd_, configuredBaud) == STATUS_NOERROR) {
+    if (configurePort(handle_, configuredBaud) == STATUS_NOERROR) {
       currentBaud_ = configuredBaud;
     }
 
     const auto preferred = ctrlMode();
     auto status = tryWithCtrl(preferred);
-    if (status != STATUS_NOERROR && fd_ < 0) {
+    if (status != STATUS_NOERROR && !serial_native::isValid(handle_)) {
       return status;
     }
 
@@ -852,8 +737,8 @@ private:
         !ctrlModeUserConfigured() &&
         boolEnv("MVCI_SERIAL_CTRL_AUTO", true)) {
       for (CtrlMode mode : {CtrlMode::None, CtrlMode::Pulse, CtrlMode::Assert}) {
-        if (mode == preferred || fd_ < 0) continue;
-        if (configurePort(fd_, configuredBaud) == STATUS_NOERROR) {
+        if (mode == preferred || !serial_native::isValid(handle_)) continue;
+        if (configurePort(handle_, configuredBaud) == STATUS_NOERROR) {
           currentBaud_ = configuredBaud;
         }
         slog("%s retrying bootstrap with alternate ctrl mode", source);
@@ -861,11 +746,11 @@ private:
         if (status == STATUS_NOERROR) {
           return STATUS_NOERROR;
         }
-        if (fd_ < 0) return status;
+        if (!serial_native::isValid(handle_)) return status;
       }
     }
 
-    if (fd_ >= 0 && configurePort(fd_, configuredBaud) == STATUS_NOERROR) {
+    if (serial_native::isValid(handle_) && configurePort(handle_, configuredBaud) == STATUS_NOERROR) {
       currentBaud_ = configuredBaud;
     }
     return status;
@@ -915,7 +800,7 @@ private:
   }
 
   bool runPostBootstrap() {
-    if (fd_ >= 0) ::tcflush(fd_, TCIOFLUSH);
+    serial_native::flushIo(handle_);
     clearRx();
     const auto& steps = replaySteps();
     for (std::size_t i = 0; i < steps.size(); ++i) {
@@ -982,13 +867,10 @@ private:
   }
 
   void closeFd() {
-    if (fd_ >= 0) {
-      ::close(fd_);
-      fd_ = -1;
-    }
+    serial_native::closePort(handle_);
   }
 
-  int fd_{-1};
+  serial_native::Handle handle_{serial_native::kInvalid};
   std::atomic<bool> open_{false};
   std::vector<std::uint8_t> rxBuffer_;
   bool miniReady_{false};

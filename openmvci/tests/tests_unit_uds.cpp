@@ -19,6 +19,15 @@ TEST_CASE("buildClearDtcRequest produces correct request") {
   CHECK(clearRequest[0] == 0x14U);
 }
 
+TEST_CASE("KWP startCommunication targets Toyota engine 0x10") {
+  const auto req = mvci::buildKwpStartCommunication();
+  CHECK(req.size() == 5);
+  CHECK(req[0] == 0x81U);
+  CHECK(req[1] == 0x10U);
+  CHECK(req[2] == 0xF1U);
+  CHECK(req[3] == 0x81U);
+}
+
 TEST_CASE("parseActiveDtcResponses handles bare UDS response") {
   std::vector<std::vector<std::uint8_t>> responses{{0x59U, 0x02U, 0xFFU, 0x01U, 0x10U, 0x20U, 0xAAU}};
   std::vector<mvci::DtcRecord> dtcs;

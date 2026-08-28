@@ -19,23 +19,27 @@ add_library(openmvci
   src/driver.cpp
   src/packet.cpp
   src/uds.cpp
-  src/platform/usb_vci.cpp
+  src/platform/serial_transport.cpp
 )
 
 if(APPLE)
-  target_sources(openmvci PRIVATE src/platform/macos_transport.cpp)
+  target_sources(openmvci PRIVATE
+    src/platform/macos_transport.cpp
+    src/platform/usb_vci.cpp
+  )
   target_link_libraries(openmvci PRIVATE
     "-framework IOKit"
     "-framework CoreFoundation"
   )
 elseif(WIN32)
+  # Serial/FTDI VCP only. Do not pull libusb (that wants WinUSB and breaks TIS).
   target_sources(openmvci PRIVATE src/platform/windows_transport.cpp)
+  target_link_libraries(openmvci PUBLIC setupapi)
 else()
-  target_sources(openmvci PRIVATE src/platform/linux_transport.cpp)
-endif()
-
-if(NOT WIN32)
-  target_sources(openmvci PRIVATE src/platform/serial_transport.cpp)
+  target_sources(openmvci PRIVATE
+    src/platform/linux_transport.cpp
+    src/platform/usb_vci.cpp
+  )
 endif()
 
 target_include_directories(openmvci
@@ -60,8 +64,10 @@ endif()
 find_package(Threads REQUIRED)
 target_link_libraries(openmvci PRIVATE Threads::Threads)
 
-find_package(LibUSB REQUIRED)
-target_link_libraries(openmvci PRIVATE LibUSB::LibUSB)
+if(NOT WIN32)
+  find_package(LibUSB REQUIRED)
+  target_link_libraries(openmvci PRIVATE LibUSB::LibUSB)
+endif()
 
 if(MVCI_BUILD_TESTS)
   # Workaround for doctest v2.4.11 (and similar older subprojects) when using
@@ -83,14 +89,20 @@ if(MVCI_BUILD_TESTS)
   add_executable(openmvci_unit_api tests/tests_unit_api.cpp)
   add_executable(openmvci_unit_uds tests/tests_unit_uds.cpp)
   add_executable(openmvci_unit_frame_resync tests/tests_unit_frame_resync.cpp)
+  add_executable(openmvci_unit_write_gate tests/tests_unit_write_gate.cpp)
+  add_executable(openmvci_unit_serial_native tests/tests_unit_serial_native.cpp)
   target_link_libraries(openmvci_smoke PRIVATE openmvci Threads::Threads doctest::doctest)
   target_link_libraries(openmvci_unit_api PRIVATE openmvci Threads::Threads doctest::doctest)
   target_link_libraries(openmvci_unit_uds PRIVATE openmvci Threads::Threads doctest::doctest)
   target_link_libraries(openmvci_unit_frame_resync PRIVATE openmvci Threads::Threads doctest::doctest)
+  target_link_libraries(openmvci_unit_write_gate PRIVATE openmvci Threads::Threads doctest::doctest)
+  target_link_libraries(openmvci_unit_serial_native PRIVATE openmvci Threads::Threads doctest::doctest)
   add_test(NAME openmvci_smoke COMMAND openmvci_smoke)
   add_test(NAME openmvci_unit_api COMMAND openmvci_unit_api)
   add_test(NAME openmvci_unit_uds COMMAND openmvci_unit_uds)
   add_test(NAME openmvci_unit_frame_resync COMMAND openmvci_unit_frame_resync)
+  add_test(NAME openmvci_unit_write_gate COMMAND openmvci_unit_write_gate)
+  add_test(NAME openmvci_unit_serial_native COMMAND openmvci_unit_serial_native)
 endif()
 
 add_executable(dtc_reader tools/dtc_reader.cpp)

@@ -8,6 +8,7 @@ It is built as an extensible **OBD platform**, not a one-off ELM327 app: the ada
 
 | If you want toâ€¦ | Read |
 | --- | --- |
+| **Elvera's Windows laptop THIS WEEK (Mini-VCI)** | [`docs/LAPTOP-NOW.md`](docs/LAPTOP-NOW.md) |
 | **Elvera's Windows laptop — OBD tests active** | [`docs/ELVERA-MACHINE.md`](docs/ELVERA-MACHINE.md) |
 | Set up on a new machine (the laptop) | [`docs/SETUP-NEW-MACHINE.md`](docs/SETUP-NEW-MACHINE.md) |
 | Run on a **Chromebook** (ChromeOS/Crostini) | [docs/CHROMEBOOK.md](docs/CHROMEBOOK.md) |

@@ -1,5 +1,9 @@
 # Elvera's Windows laptop — get OBD tests active
 
+> **This week’s job is Mini-VCI, not mock OBD.** Follow
+> [`docs/LAPTOP-NOW.md`](LAPTOP-NOW.md) instead (paste: `Follow docs/LAPTOP-NOW.md`).
+> This file is only the Node mock-capture setup.
+
 This is the handover for **Grok on Elvera's Windows laptop**. Pierre types
 nothing. You run every command. Report outcomes, not runbooks.
 

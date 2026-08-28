@@ -8,6 +8,7 @@
 
 #include "mvci/api.hpp"
 #include "mvci/uds.hpp"
+#include "mvci/write_gate.hpp"
 
 namespace {
 
@@ -23,6 +24,10 @@ struct Options {
   bool verbose{false};
   bool help{false};
   bool fetchVin{true};
+  bool openOnly{false};
+  bool autoProtocol{true};
+  std::uint32_t protocolId{0};
+  mvci::WriteIntent write;
 };
 
 bool parseUint(const std::string& text, std::uint32_t& value) {
@@ -35,7 +40,11 @@ bool parseUint(const std::string& text, std::uint32_t& value) {
 }
 
 void printUsage() {
-  std::cout << "Usage: dtc_reader [--device NAME] [--baud N] [--timeout MS] [--mask N] [--interval MS] [--read] [--clear] [--monitor] [--verbose] [--no-vin]\n";
+  std::cout << "Usage: dtc_reader [--device NAME] [--baud N] [--timeout MS] [--mask N] [--interval MS]\n"
+            << "                  [--read] [--open-only] [--monitor] [--verbose] [--no-vin]\n"
+            << "                  [--protocol iso15765|iso14230|iso9141]\n"
+            << "                  [--clear --i-understand-this-writes]\n"
+            << "Writes need BOTH the specific flag and --i-understand-this-writes. Default is read-only.\n";
 }
 
 void printFrame(const char* label, const std::vector<std::uint8_t>& frame) {
@@ -51,12 +60,45 @@ bool parseArgs(int argc, char** argv, Options& options) {
     }
     if (arg == "--clear") {
       options.clear = true;
+      options.write.clear = true;
       options.read = false;
+      continue;
+    }
+    if (arg == "--i-understand-this-writes") {
+      options.write.understandsWrites = true;
+      continue;
+    }
+    if (arg == "--open-only") {
+      options.openOnly = true;
+      options.read = false;
+      options.clear = false;
+      options.write.clear = false;
+      continue;
+    }
+    if (arg == "--ecu-reset") {
+      options.write.ecuReset = true;
+      continue;
+    }
+    if (arg == "--security-access") {
+      options.write.securityAccess = true;
+      continue;
+    }
+    if (arg == "--write-memory") {
+      options.write.writeMemory = true;
+      continue;
+    }
+    if (arg == "--reflash") {
+      options.write.reflash = true;
+      continue;
+    }
+    if (arg == "--control-dtc") {
+      options.write.controlDtc = true;
       continue;
     }
     if (arg == "--read") {
       options.read = true;
       options.clear = false;
+      options.write.clear = false;
       options.monitor = false;
       continue;
     }
@@ -81,6 +123,26 @@ bool parseArgs(int argc, char** argv, Options& options) {
     const std::string value = argv[++index];
     if (arg == "--device") {
       options.deviceName = value;
+    } else if (arg == "--protocol") {
+      options.autoProtocol = false;
+      if (value == "iso15765" || value == "can") {
+        options.protocolId = mvci::PROTOCOL_ISO15765;
+      } else if (value == "iso14230" || value == "kwp") {
+        options.protocolId = mvci::PROTOCOL_ISO14230;
+      } else if (value == "iso9141") {
+        options.protocolId = mvci::PROTOCOL_ISO9141;
+      } else {
+        return false;
+      }
+    } else if (arg == "--io-control") {
+      options.write.ioControl = true;
+      options.write.hexPayload = value;
+    } else if (arg == "--routine") {
+      options.write.routine = true;
+      options.write.hexPayload = value;
+    } else if (arg == "--write-did") {
+      options.write.writeDid = true;
+      options.write.hexPayload = value;
     } else if (arg == "--baud") {
       if (!parseUint(value, options.baudRate)) {
         return false;
@@ -221,7 +283,17 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  if (!options.read && !options.clear) {
+  const auto gate = mvci::evaluateWriteGate(options.write);
+  if (gate.result == mvci::WriteGateResult::Blocked) {
+    std::cerr << gate.message << '\n';
+    return 1;
+  }
+  if (gate.result == mvci::WriteGateResult::Allowed && !mvci::writeIsImplemented(options.write)) {
+    std::cerr << "WRITE BLOCKED: that write service is a stub; nothing sent\n";
+    return 1;
+  }
+
+  if (!options.read && !options.clear && !options.openOnly) {
     options.read = true;
   }
 
@@ -233,68 +305,148 @@ int main(int argc, char** argv) {
     std::cerr << "PassThruOpen failed: " << mvci::statusToString(status) << '\n';
     return 1;
   }
+  std::cout << "PassThruOpen OK\n";
 
-  status = PassThruConnect(deviceId, mvci::PROTOCOL_ISO15765, 0, options.baudRate, &channelId);
-  if (status != mvci::STATUS_NOERROR) {
-    std::cerr << "PassThruConnect failed: " << mvci::statusToString(status) << '\n';
-    PassThruClose(deviceId);
-    return 1;
+  char fw[80] = {};
+  char dll[80] = {};
+  char api[80] = {};
+  if (PassThruReadVersion(deviceId, fw, dll, api) == mvci::STATUS_NOERROR) {
+    std::cout << "Version fw=" << fw << " dll=" << dll << " api=" << api << '\n';
   }
 
-  const auto cleanup = [&]() {
-    PassThruDisconnect(channelId);
+  if (options.openOnly) {
     PassThruClose(deviceId);
-  };
-
-  if (options.clear) {
-    status = runClearCycle(channelId, options);
-    if (status != mvci::STATUS_NOERROR) {
-      std::cerr << "Clear DTC request failed: " << mvci::statusToString(status) << '\n';
-      if (status == mvci::ERR_TIMEOUT) {
-        std::cerr << "Hint: try MVCI_OBD_CAN_ID=0x7E0 (physical ECM address) and/or ignition ON.\n";
-      }
-      cleanup();
-      return 1;
-    }
-
-    std::cout << "DTC clear request accepted.\n";
-    cleanup();
+    std::cout << "Open/close desk test passed (no car protocol).\n";
     return 0;
   }
 
-  do {
+  struct Attempt {
+    std::uint32_t protocol;
+    std::uint32_t baud;
+    bool kwpFastInit;
+  };
+  std::vector<Attempt> attempts;
+  if (!options.autoProtocol) {
+    const std::uint32_t baud = (options.protocolId == mvci::PROTOCOL_ISO15765)
+                                   ? options.baudRate
+                                   : (options.baudRate == 500000U ? 10400U : options.baudRate);
+    attempts.push_back({options.protocolId, baud, options.protocolId == mvci::PROTOCOL_ISO14230});
+  } else {
+    attempts.push_back({mvci::PROTOCOL_ISO15765, options.baudRate, false});
+    attempts.push_back({mvci::PROTOCOL_ISO14230, 10400U, true});
+    attempts.push_back({mvci::PROTOCOL_ISO9141, 10400U, false});
+  }
+
+  status = mvci::ERR_FAILED;
+  for (const auto& attempt : attempts) {
+    std::cout << "Trying " << mvci::protocolName(attempt.protocol) << " @ " << attempt.baud << " ...\n";
+    status = PassThruConnect(deviceId, attempt.protocol, 0, attempt.baud, &channelId);
+    if (status != mvci::STATUS_NOERROR) {
+      std::cerr << "  PassThruConnect failed: " << mvci::statusToString(status) << '\n';
+      continue;
+    }
+
+    if (attempt.kwpFastInit) {
+      std::vector<std::vector<std::uint8_t>> initRx;
+      const auto initStatus =
+          mvci::sendRawRequest(channelId, attempt.protocol, mvci::buildKwpStartCommunication(),
+                               initRx, options.timeoutMs);
+      std::cout << "  KWP startCommunication: " << mvci::statusToString(initStatus) << '\n';
+    }
+
+    if (options.clear && !options.autoProtocol) {
+      break;
+    }
+
+    bool vinOk = false;
+    bool dtcOk = false;
     if (options.fetchVin) {
       std::string vin;
       const auto vinStatus = runVinReadCycle(channelId, options, vin);
       if (vinStatus == mvci::STATUS_NOERROR) {
         std::cout << "VIN: " << vin << '\n';
+        vinOk = true;
       } else {
-        std::cout << "VIN unavailable: " << mvci::statusToString(vinStatus) << '\n';
-        if (vinStatus == mvci::ERR_TIMEOUT) {
-          std::cout << "Hint: for many GM vehicles (e.g. 2013 Cruze) set MVCI_OBD_CAN_ID=0x7E0 before running.\n";
-          std::cout << "      Also ensure ignition is ON (RUN position) and the adapter is connected to the OBD port.\n";
-        }
+        std::cout << "  VIN unavailable on " << mvci::protocolName(attempt.protocol) << ": "
+                  << mvci::statusToString(vinStatus) << '\n';
       }
     }
 
     std::vector<mvci::DtcRecord> dtcs;
-    status = runReadCycle(channelId, options, dtcs);
-    if (status != mvci::STATUS_NOERROR) {
-      std::cerr << "Read DTC request failed: " << mvci::statusToString(status) << '\n';
-      if (status == mvci::ERR_TIMEOUT) {
-        std::cerr << "Hint: try MVCI_OBD_CAN_ID=0x7E0 (physical ECM address) and/or ignition ON.\n";
+    const auto dtcStatus = runReadCycle(channelId, options, dtcs);
+    if (dtcStatus == mvci::STATUS_NOERROR) {
+      dtcOk = true;
+      printDtcs(dtcs);
+    } else {
+      std::cout << "  DTC read unavailable on " << mvci::protocolName(attempt.protocol) << ": "
+                << mvci::statusToString(dtcStatus) << '\n';
+    }
+
+    if (vinOk || dtcOk) {
+      std::cout << "Cable talks on " << mvci::protocolName(attempt.protocol) << '\n';
+      status = mvci::STATUS_NOERROR;
+      if (options.clear || options.monitor) {
+        break;
       }
+      PassThruDisconnect(channelId);
+      PassThruClose(deviceId);
+      return 0;
+    }
+
+    PassThruDisconnect(channelId);
+    channelId = 0;
+    status = mvci::ERR_TIMEOUT;
+  }
+
+  if (channelId == 0 && !options.clear) {
+    std::cerr << "No protocol answered (CAN timeout is expected on this K-line 1KD; K-line also failed).\n";
+    PassThruClose(deviceId);
+    return 1;
+  }
+
+  if (status != mvci::STATUS_NOERROR && !options.clear) {
+    std::cerr << "Read DTC request failed: " << mvci::statusToString(status) << '\n';
+    if (status == mvci::ERR_TIMEOUT) {
+      std::cerr << "Hint: ignition ON; USB Mini-VCI in laptop and 16-pin in the Prado.\n";
+    }
+    if (channelId != 0) {
+      PassThruDisconnect(channelId);
+    }
+    PassThruClose(deviceId);
+    return 1;
+  }
+
+  const auto cleanup = [&]() {
+    if (channelId != 0) {
+      PassThruDisconnect(channelId);
+    }
+    PassThruClose(deviceId);
+  };
+
+  if (options.clear) {
+    std::cerr << "WRITE SENT: 14 (ClearDiagnosticInformation) \n";
+    status = runClearCycle(channelId, options);
+    if (status != mvci::STATUS_NOERROR) {
+      std::cerr << "Clear DTC request failed: " << mvci::statusToString(status) << '\n';
       cleanup();
       return 1;
     }
+    std::cout << "DTC clear request accepted.\n";
+    cleanup();
+    return 0;
+  }
 
-    printDtcs(dtcs);
-    if (!options.monitor) {
-      break;
-    }
-
+  while (options.monitor) {
     std::this_thread::sleep_for(std::chrono::milliseconds(options.intervalMs));
-  } while (options.monitor);
+    std::vector<mvci::DtcRecord> dtcs;
+    status = runReadCycle(channelId, options, dtcs);
+    if (status != mvci::STATUS_NOERROR) {
+      std::cerr << "Read DTC request failed: " << mvci::statusToString(status) << '\n';
+      cleanup();
+      return 1;
+    }
+    printDtcs(dtcs);
+  }
 
   cleanup();
   return 0;
