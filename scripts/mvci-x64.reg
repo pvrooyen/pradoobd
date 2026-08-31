@@ -1,0 +1,27 @@
+Windows Registry Editor Version 5.00
+
+; Registers XHorse Mini-VCI as a J2534 PassThru device for 64-bit Windows.
+; Import only AFTER MVCI32.dll and FirmwareUpdateTool.exe exist at these paths.
+; Do not flash firmware. Device Info only.
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PassThruSupport.04.04]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\PassThruSupport.04.04\XHorse - MVCI]
+"Name"="XHorse - MVCI"
+"Vendor"="XHorse ELECTRONICS Co.,Ltd."
+"ConfigApplication"="C:\\Program Files (x86)\\XHorse Electronics\\MVCI Driver for TOYOTA TIS\\FirmwareUpdateTool.exe"
+"FunctionLibrary"="C:\\Program Files (x86)\\XHorse Electronics\\MVCI Driver for TOYOTA TIS\\MVCI32.dll"
+"APIVersion"="04.04"
+"ProductVersion"="1.1.0"
+"ProtocolsSupported"="J1850VPW:1, J1850PWM:1, CAN:1, ISO9141:1, ISO14230:1, ISO15765:1"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\PassThruSupport.04.04]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\PassThruSupport.04.04\XHorse - MVCI]
+"Name"="XHorse - MVCI"
+"Vendor"="XHorse ELECTRONICS Co.,Ltd."
+"ConfigApplication"="C:\\Program Files (x86)\\XHorse Electronics\\MVCI Driver for TOYOTA TIS\\FirmwareUpdateTool.exe"
+"FunctionLibrary"="C:\\Program Files (x86)\\XHorse Electronics\\MVCI Driver for TOYOTA TIS\\MVCI32.dll"
+"APIVersion"="04.04"
+"ProductVersion"="1.1.0"
+"ProtocolsSupported"="J1850VPW:1, J1850PWM:1, CAN:1, ISO9141:1, ISO14230:1, ISO15765:1"

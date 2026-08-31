@@ -1,8 +1,12 @@
 ﻿# HANDOVER — orders to the next Grok
 
-> **On Elvera's Windows laptop THIS WEEK?** Ignore the Chromebook section below.
-> Follow [`docs/LAPTOP-NOW.md`](docs/LAPTOP-NOW.md) (paste-prompt at the top).
-> Free Mini-VCI reads. No TIS. Full plan: [`docs/FREE-MINIVCI.md`](docs/FREE-MINIVCI.md).
+> **Pierre said GO on the Windows desktop (2026-08-31+)?** Ignore everything
+> below. Read [`docs/DESKTOP-GO.md`](docs/DESKTOP-GO.md) and run it.
+> Paste prompt: `Follow docs/DESKTOP-GO.md`
+>
+> **On Elvera's Windows laptop THIS WEEK and the car session has not happened?**
+> Follow [`docs/LAPTOP-NOW.md`](docs/LAPTOP-NOW.md). Full plan:
+> [`docs/FREE-MINIVCI.md`](docs/FREE-MINIVCI.md).
 
 You are on Pierre's HP Chromebook x360 14-da (board SONA). He types little. Do the work. Do not send him through Recovery. Chrome OS Linux (Crostini) is already on.
 

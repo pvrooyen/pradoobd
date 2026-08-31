@@ -32,3 +32,6 @@ Thumbs.db
 # OpenMVCI local build
 openmvci/build/
 
+# Local Techstream/MVCI downloads (large / untrusted). Do not commit.
+techstream-staging/
+

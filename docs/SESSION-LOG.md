@@ -5,6 +5,24 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-08-31 — Live Mini-VCI at the Prado (Elvera laptop); hand to desktop
+
+**Scope:** Pierre driving then idle in park. Mini-VCI on COM3. Wanted data then Techstream-path test without paying TIS 48h. Wrapped so desktop Grok can take `go`.
+
+**Cable:** Takealot Mini-VCI + TIS Techstream. FTDI `0403:6001` serial `A6VON31I` = **USB Serial Port (COM3)**. Not ELM327.
+
+**Dump:** `scripts/minivci-live-dump.mjs`. Bootstrap **OK** at **115200, DTR/RTS none**. ECU **silent** (no VIN, 0 DTCs, 0 PIDs, 0 Mode 22). Expected: 1KD is K-line; dump sent OpenMVCI ICVM/CAN frames. Honest empties in `captures/prado-live-2026-08-31T14-23-58-823Z.md` (gitignored). Elvera had **no CMake/MSVC**, so `dtc_reader` was not built there.
+
+**Do not pay TIS to test this cable.** Toyota Techstream Lite diagnostics are validated on Mongoose, not Mini-VCI. Mini-CD banned. No firmware flash.
+
+**Driver (Elvera only):** XHorse files + `mvci-x64.reg`. FirmwareUpdateTool **UAC/admin → silent exit** (cwd System32). Launcher: `scripts/MiniVCI-DeviceInfo.bat` (no admin). Device Info **not finished**.
+
+**Next:** desktop `git pull`, paste `Follow docs/DESKTOP-GO.md`. Desktop already has Windows serial OpenMVCI. First: `--open-only` / `--read` **and** Device Info. No TIS.
+
+**Docs:** `docs/DESKTOP-GO.md`. Pointers in `HANDOVER.md`.
+
+---
+
 ## 2026-08-28 — Free Mini-VCI: Windows serial + write gate (PierrePC)
 
 **Scope:** implement FREE-MINIVCI phases 1–2 on the desktop. No car. Cable not plugged in here.
@@ -15,7 +33,7 @@ the code, and what to do next. Keep it short and factual.
 
 **Not built:** live PIDs / Mode 22 capture writer (waits until the cable talks).
 
-**Next:** Elvera’s Windows laptop. Paste `Follow docs/LAPTOP-NOW.md`. That Grok pulls, builds, plugs the cable, `--open-only`, then `--read` at the Prado. No TIS this week.
+**Next (superseded 2026-08-31):** car session happened on Elvera; continue on desktop via DESKTOP-GO.
 
 ---
 

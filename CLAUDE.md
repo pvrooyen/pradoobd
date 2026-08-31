@@ -1,7 +1,11 @@
 # CLAUDE.md — instructions for Claude Code sessions in this repo
 
-> 🪟 **On Elvera’s Windows laptop THIS WEEK (free Mini-VCI)?** Follow
-> **`docs/LAPTOP-NOW.md` only** (paste-prompt at the top). Then this file.
+> 🪟 **Pierre said GO on the Windows desktop after the 2026-08-31 car session?**
+> Follow **`docs/DESKTOP-GO.md` only** (paste-prompt at the top). Then this file.
+>
+> 🪟 **On Elvera’s Windows laptop (free Mini-VCI, no car results yet)?** Follow
+> **`docs/LAPTOP-NOW.md` only**. After 2026-08-31, prefer DESKTOP-GO if he is
+> on the desktop.
 >
 > 🪟 **Free Mini-VCI full plan (USB, stay on WiFi, no TIS yet)?**
 > **`docs/FREE-MINIVCI.md`**. Do not invent a second plan.
