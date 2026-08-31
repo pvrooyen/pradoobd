@@ -5,6 +5,122 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-08-31 — Stop Techstream on PierrePC; laptop GO + USB pack
+
+**Decision:** do **not** install Techstream on the daily desktop. Tomorrow: Elvera’s HP ProBook 455 Windows. Pierre says **go**. Agent follows **`docs/LAPTOP-GO.md` only**.
+
+**Why V12 died:** S314-02 empty warning on Connect is a **license gate**. Cable, Device Info 1.4.1, and VIM XHorse were already fine. Dummy 5000-day key + ISO MainMenu open the shell; `[TBR - EU]` stays empty. ISO “Patch 64bit.lnk” is a fake (`Techstream.exe /395070/VM:1`). xwolf `TS_loader` v0.1 on V12: **RUN no key** grey (already launched), Connect still S314-02. That loader auto-closes **S314-01**, not S314-02. Matching path is **stock V18.00.008 + TS_loader + TSRegistration from the same Activation pack**.
+
+**Desktop leftover:** V12 uninstalled. V18 wizard was showing “update 12.20.024 → 18.00.008”; Pierre aborted. Folder `C:\Program Files (x86)\Toyota Diagnostics\Techstream.bak-v12-20260831160033`. XHorse driver still installed. Do not continue V18 here.
+
+**USB (Ventoy, do not format, do not delete ISOs):** `D:\prado-techstream\` (~514 MB). Hashes verified after copy. RAR password `123`.
+
+| USB file | SHA256 |
+| --- | --- |
+| `Techstream\Techstream_Setup_V18.00.008.exe` | `3A799DE3…86BC46` |
+| `Techstream\TS_loader.exe` | `838499AE…B3D954` |
+| `Techstream\TSRegistration.exe` | `5F6CA57B…2476E7` |
+| `Techstream\Techstream_18.00.008_Activation.rar` | `B4E2DAC8…DB23DD` |
+| `Driver\mvci-driver.rar` | `BD9377A0…27275F` |
+
+**Tomorrow Phase A (desk):** driver Device Info → install V18 from stick → copy loader+TSRegistration into `bin` → always launch TS_loader → Connect must be vehicle-select **or** comm-fail, **not** S314-02. Then car Health Check. Injectors still need 30-char stamps.
+
+**Do not:** flash, Zadig, mini-CD, 48h TIS, hypervisor, dummy keys, mix binaries, format Ventoy.
+
+---
+
+## 2026-08-31 — Compact follow-up: real TS_loader found and launched (Connect not proven yet)
+
+**Why the Takealot CD failed:** the 2021 ISO’s “Techstream Patch 64bit.lnk” is a fake (targets `Techstream.exe /395070/VM:1`). Dummy 5000-day key + patched MainMenu open the shell; **Connect still hits S314-02** because `[TBR - EU]` stays empty. Daily working installs launch via a resident **TS_loader.exe** that auto-closes the license dialog. S314-02 = license, not the cable.
+
+**Got the real files** from AutoBoss Yandex `https://disk.yandex.ru/d/6V5E7rLArBkuQQ` pack `Toyota Techstream 18.00.008+Activation_пар 123.rar` (SHA256 `B4E2DAC8271FA4200099CFBB647878B0F6CE58403FD10403AD6D019F0BDB23DD`, 254877692 bytes, password `123`). Defender: no threats. No http/powershell/schtasks in the loader.
+
+| File | Size | SHA256 | Date |
+| --- | --- | --- | --- |
+| `TS_loader.exe` | 382464 | `838499AE948D3FDBED176FE4F625E4A8DFC4FC5DCAD1A9379F7C9E7B7FB3D954` | 2017-10-06 |
+| `TSRegistration.exe` | 397312 | `5F6CA57B5635EFEBAB5BF291C7E71E3EB2896D15236A01B0C635AF56602476E7` | 2023-02-23 |
+
+Copied into `C:\Program Files (x86)\Toyota Diagnostics\Techstream\bin\`. Desktop shortcut `Techstream Loader.lnk`. Launched: **Toyota TS loader** window with **RUN no key** + Techstream V12.20.024 still showing **VIM - XHorse - MVCI J2534 DLL v1.4.6**. TSRegistration **not** run yet (it is labelled V18 key form).
+
+**Pierre’s next click (desk only):** **RUN no key**, then **Connect to Vehicle**. Success = vehicle-select **or** communicate-fail. Fail = S314-02 empty warning again. Do **not** go to the car until that.
+
+**Do not:** firmware Update, Zadig, mini-CD, 48h TIS, hypervisor, mix V12/V16 binaries again.
+
+---
+
+## 2026-08-31 — Power-loss consult (car talk only; no OBD)
+
+**Scope:** driveability after the Inhambane return. Pierre thought protected mode; 2 and L still had pull, D did not. Then almost no power after ~30 s in any gear; in Park the pedal would not take it past ~1500 rpm. Last metres home: pushed, pedal on the floor. Mechanic cleaned a connector on a big black box, driver-side inner wing (left of the engine viewed from the front).
+
+**Verdict:** fail-safe **and** the injectors barely being driven. Not the gearbox, not the turbo, not the accelerator pedal.
+
+That box is the **EDU (injector driver)**. Cabin ECU only *asks*; the EDU fires the injectors and must confirm. A dirty plug both starves the drive and makes the ECU think the injectors have failed, so it enters fail-safe (CEL, ~1500 rpm wall, pedal ignored). Last week 2/L still moved it because a short gear hid the limited engine. At the end the plug was so bad there was almost no injection under load — idle in Park still ran (sip of fuel); moving the car needed a gulp that was not there. Fail-safe is meant to limp you home; this went past that.
+
+Cleaning is a valid fix. It will come back if the seal is torn or the pins are green — then replace the plug or the EDU, not another spray. Watch it after rain or a dusty run.
+
+No code changes. Not the Mini-VCI / Techstream track.
+
+**Next:** none on this topic unless the limp returns.
+
+---
+
+## 2026-08-31 — PierrePC desktop GO: cable + Device Info OK; Techstream Connect blocked (S314-02)
+
+**AFTER COMPACT — FIRST ACTION (do not skip):** launch a **multi-agent deep investigation**. Not more random GUI clicks. Question to answer: Mini-VCI kits are sold every day; how do buyers in 2025–2026 actually get **Connect to Vehicle** working on **Windows 10/11 x64** with this exact hardware (FTDI `0403:6001` fw **1.4.1**), and how do we get past **Register Techstream Software (S314-02)** empty warning → OK → **nothing**. Deliver: working recipe + a real `Toyota Launcher` / `Techstream Patch 64bit` **EXE** (not a `.lnk` to `Techstream.exe /395070/VM:1`) + hashes + how to run it. Then implement that recipe on this PC. Do **not** go to the car until Connect opens a vehicle screen **or** a communicate-fail dialog on the desk.
+
+**Machine:** PierrePC. Repo `C:\Projects\pradoobd` on `main`. User types nothing; agent runs commands.
+
+**Product Pierre bought:** Takealot Mini-VCI + TIS Techstream (PLID93817397). Cable + software. He only got a **CD** and has **no CD reader**. Official Toyota 48h TIS is a **different product** (Mongoose). Do not tell him to buy it. Do not flash firmware. No Zadig. No hypervisor on this desktop.
+
+**Proven on this PC today**
+
+| Item | Result |
+| --- | --- |
+| Cable | COM4, `VID_0403/PID_6001`, serial `A6VON31I`, Status OK |
+| OpenMVCI `--open-only` | Pass. Bootstrap 115200, `MVCI_SERIAL_CTRL_MODE=none` |
+| OpenMVCI `--read` | Dongle unlocks; ECU silent. ICVM/CAN frames. Honest timeout. Logs in `captures/` |
+| XHorse Device Info | **Connected**. Model **MVCI-HC**. Firmware **1.4.1**. SN `MVCI006000001`. Tool window 1.4.8 ≠ cable fw |
+| J2534 from Techstream | Status bar **VIM - XHorse - MVCI MVCI J2534 DLL v1.4.6**. `j2534_*.log`: PTOpen OK, fw `J2534 MINIV1.03` |
+| Driver pack | Yandex RAR hashes matched; files in `C:\Program Files (x86)\XHorse Electronics\MVCI Driver for TOYOTA TIS\`; `scripts/mvci-x64.reg` imported; restore point created |
+
+**Techstream state (blocked)**
+
+- Installed then **uninstalled** genuine Denso **V16.20.023** (dummy disc key rejected; Software ID was `9BB2CF36167F6F1F0ADE4E09E23EC002`).
+- Now: **V12.20.024** from kit ISO `techstream-staging/cd-iso/toyota mini vci 16.00.017.iso` (681 MB, MEGA vxdas). Desktop shortcut Public `Techstream.lnk`.
+- `IT3System.ini`: `TISFunction=0`, VIM `XHorse - MVCI`.
+- Disc key entered and **stored** in `IT3UserCustom.ini` `[Registration - EU]` / `[Sdfhrusauhno]`: `1111111111111111111111111111111150001703161820`. `[TBR - EU]` **empty**.
+- **Connect to Vehicle** and **Generic OBD II** both: dialog **Register Techstream Software (S314-02)** empty **Warning!** → OK → **no next window**. MainMenu never starts `Techstream.exe`. That is a **license gate on this PC**, not a missing car. Do not send him to the Prado for this.
+
+**Tried and failed (do not repeat blindly)**
+
+- Dummy 5000-day key on **genuine V16** MainMenu: dialog bounced empty.
+- Swap V12 patched `MainMenu.exe` onto **V16**: Connect did **nothing** (version mix).
+- V12 patched `MainMenu.exe` (ISO `Techstream_12.20.024\MainMenu.exe`, 2842624, ver 12.2.0.9) + stock V12 `Techstream.exe`: key “sticks” on main UI; Connect still S314-02.
+- ISO “Techstream Patch 64bit.lnk” is **not a patcher**. Target = `...\bin\Techstream.exe` args `/395070/VM:1`. Direct launch: process, **no window**, exits.
+- Mix KEY `Techstream.exe` (ISO `Techstream_13.00.022\KEY\`, ver 12.0.0.10) with V12.2 MainMenu: Connect dead. Restored stock V12 exe.
+- Matched KEY pair (both 12.0.0.10): still S314-02.
+- MEGA rate-limit **-6**; folder `7VZzBQgZ` **-9**. Could not fetch OBDII365 “Techstream Patch 64bit” / Toyota Launcher tonight.
+- YouTube Dropbox pack: 352-byte stub zip, useless.
+- Clock-rollback test aborted (w32tm hang). Clock is **2026** again. `w32time` running.
+
+**Local files (gitignored `techstream-staging/`)**
+
+- `v16/Techstream_Setup_V16.20.023.exe` (Denso, Defender clean)
+- `v12/Techstream_12.20.024\` setup + patched MainMenu
+- `cd-iso\toyota mini vci 16.00.017.iso` + extracted KEY binaries
+- `mega_get.py` anonymous MEGA downloader
+- Backups: `bin\MainMenu.exe.bak-stock-v12`, `bin\Techstream.exe.bak-stock-v12`
+
+**Captures (gitignored):** `captures/prado-dtc-reader-2026-08-31T13-16-47.md`, `captures/techstream-deviceinfo-2026-08-31.md`, `captures/dtc-reader-*.log`
+
+**Why “people buy this every day” still failed here:** the Takealot box is cable + a **malware-class mini-CD**. Working installs use a **separate loader EXE** (Toyota Launcher / Techstream Patch 64bit) plus XHorse J2534. We installed the real Denso app and the 2021 ISO’s fake `.lnk` “patch”. Dummy keys + MainMenu swap open the shell; **Connect still wants TBR/CUW**. No CD drive to run TISKEY.exe. MEGA mirrors died tonight.
+
+**Do not:** firmware Update, Zadig, mini-CD, 8.10.021 crack zip, official 48h TIS, VirtualBox on PierrePC, `--clear`, injector Utility until Connect works **and** Pierre has the four 30-char stamps.
+
+**Injector coding (later, after Connect works at the car):** Engine and ECT → Utility → Injector Compensation (#1 front) → then Utility → Pilot Quantity Learning. Need physical 30-char codes.
+
+---
+
 ## 2026-08-31 — Live Mini-VCI at the Prado (Elvera laptop); hand to desktop
 
 **Scope:** Pierre driving then idle in park. Mini-VCI on COM3. Wanted data then Techstream-path test without paying TIS 48h. Wrapped so desktop Grok can take `go`.

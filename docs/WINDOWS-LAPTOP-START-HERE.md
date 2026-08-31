@@ -1,9 +1,10 @@
 # START HERE — fresh Claude Code session on the borrowed Windows laptop
 
 If you are a Claude Code session that just started on a **Windows laptop** the user
-(Pierre) borrowed to run **Toyota Techstream**: this file is your mission. Read it
-first, then `docs/TECHSTREAM-WINDOWS.md` + `docs/TECHSTREAM-SANDBOX-VETTING.md` for
-the vetting rubric, and `docs/SESSION-LOG.md` (newest entries) for full context.
+(Pierre) borrowed to run **Toyota Techstream**: **`docs/LAPTOP-GO.md` is the
+mission** (V18 + USB pack + TS_loader). This file is background. Also read
+`docs/TECHSTREAM-WINDOWS.md` + `docs/TECHSTREAM-SANDBOX-VETTING.md` for the
+vetting rubric, and `docs/SESSION-LOG.md` (newest entries).
 
 ## ⛔ HARD RULE — do NOT install VirtualBox / any hypervisor / any USB-filter driver
 

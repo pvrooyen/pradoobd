@@ -168,3 +168,11 @@ Discussed only these two. Full session write-up in `docs/SESSION-LOG.md`.
 - **Trip verdict:** 1500 km is fine if the dipstick is checked every fuel stop and a few litres of diesel oil travel in the back. No extra damage expected if the sump stays between MIN and MAX. Stop only if the light comes on from cold, a hot idle knock starts, consumption goes to ~1 L / 100 km, or the box starts slipping.
 - **Why yellow not red:** 120 Prado oil-**pressure** warning is the **red oil-can**. Amber after warm-up is most likely **A/T oil temp** (ATF cooler lives in that radiator) — confirm the symbol. Engine leak and this lamp may be separate.
 - Fuel for planning: ~6 L / 50 km × 116.25 MZN/L ≈ **700 MZN / 50 km**.
+
+## 2026-08-31 — Power loss after Inhambane; EDU connector cleaned
+
+- ~1 week after return: down on power, CEL on. Felt like limp. **D weak; 2 and L still pulled.**
+- Then: ~30 s driving → almost no power in D/2/L. Park, pedal down, **~1500 rpm ceiling**. Last metres: **pushed**, pedal on the floor.
+- Mechanic: cleaned the connector on a **big black box, driver-side inner wing** (left of engine from the front) = **1KD EDU (injector driver)**, not the cabin ECU.
+- Consult: both fail-safe (ECU saw no injector confirmation, limited fuel, threw the pedal away) **and** the EDU barely firing injectors. Not gearbox, not turbo. 2/L “power” was a short gear hiding a limited engine. Push-home was past limp — almost no injection under load.
+- Fix is real if pins were only dirty. Recurs if the seal/pins are gone (dust, oil mist, humidity). Replace plug or EDU then, not more cleaner.

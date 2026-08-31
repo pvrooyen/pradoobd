@@ -1,10 +1,15 @@
 ﻿# HANDOVER — orders to the next Grok
 
-> **Pierre said GO on the Windows desktop (2026-08-31+)?** Ignore everything
-> below. Read [`docs/DESKTOP-GO.md`](docs/DESKTOP-GO.md) and run it.
-> Paste prompt: `Follow docs/DESKTOP-GO.md`
+> **Pierre said GO on Elvera’s Windows laptop (Techstream, 2026-08-31+)?**
+> Ignore everything below. Read [`docs/LAPTOP-GO.md`](docs/LAPTOP-GO.md).
+> Paste prompt: `Follow docs/LAPTOP-GO.md`
+> USB pack on the Ventoy stick: `prado-techstream\` (do not format the stick).
 >
-> **On Elvera's Windows laptop THIS WEEK and the car session has not happened?**
+> **Pierre said GO on the Windows desktop?** Read
+> [`docs/DESKTOP-GO.md`](docs/DESKTOP-GO.md). Do **not** install Techstream on
+> PierrePC — that job moved to the laptop.
+>
+> **On Elvera's Windows laptop and the job is OpenMVCI only (no Techstream)?**
 > Follow [`docs/LAPTOP-NOW.md`](docs/LAPTOP-NOW.md). Full plan:
 > [`docs/FREE-MINIVCI.md`](docs/FREE-MINIVCI.md).
 

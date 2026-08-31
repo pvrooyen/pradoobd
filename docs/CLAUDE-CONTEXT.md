@@ -113,6 +113,10 @@ UI; the watcher + capture files are the main path. The browser UI is optional.
 - **2026-08-13 consult:** yellow oil light + leak. 1500 km trip approved if dipstick
   is checked every fuel stop. Yellow ≠ oil pressure (that's red); likely A/T temp.
   See `docs/SESSION-LOG.md`.
+- **2026-08-31 consult:** power loss after Inhambane. Mechanic cleaned the **EDU
+  (injector driver)** connector on the driver-side inner wing. Fail-safe plus
+  injectors barely firing — not gearbox, not turbo. May recur if the plug seal
+  is gone. See `docs/SESSION-LOG.md` and `docs/vehicle/notes.md`.
 - Open backlog (not today's topic): stolen keys still live, fans not spinning,
   front sitting low, injectors uncoded, windows dead, timing-belt receipts unknown.
 - No Toyota Mode 22 PID is confirmed — all provisional. Scaffold builds; mock OK.

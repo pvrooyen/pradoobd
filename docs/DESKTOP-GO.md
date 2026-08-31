@@ -12,6 +12,8 @@ You run every command. Pierre types **go**, plugs the Mini-VCI, ignition ON. He 
 
 You are on **PierrePC (Windows desktop)**, not Elvera’s laptop. Elvera had **no CMake/MSVC**. This desktop already built OpenMVCI Windows serial (commit on `main`: write gate + `CreateFile` COM). Use that.
 
+**2026-08-31:** Do **not** install Techstream on this PC. Pierre aborted V18 here. Techstream + Mini-VCI GUI is **`docs/LAPTOP-GO.md`** on Elvera’s Windows, pack on the Ventoy stick `prado-techstream\`.
+
 ## What “done” is for this session
 
 1. Mini-VCI enumerated (FTDI `0403:6001`, some `COMx`).

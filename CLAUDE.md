@@ -1,11 +1,16 @@
 # CLAUDE.md — instructions for Claude Code sessions in this repo
 
+> 🪟 **Pierre said GO on Elvera’s Windows laptop (Techstream after 2026-08-31)?**
+> Follow **`docs/LAPTOP-GO.md` only** (paste-prompt at the top). USB pack:
+> Ventoy `prado-techstream\`. Then this file.
+>
 > 🪟 **Pierre said GO on the Windows desktop after the 2026-08-31 car session?**
-> Follow **`docs/DESKTOP-GO.md` only** (paste-prompt at the top). Then this file.
+> Follow **`docs/DESKTOP-GO.md` only**. Do **not** install Techstream on
+> PierrePC — laptop only. Then this file.
 >
 > 🪟 **On Elvera’s Windows laptop (free Mini-VCI, no car results yet)?** Follow
-> **`docs/LAPTOP-NOW.md` only**. After 2026-08-31, prefer DESKTOP-GO if he is
-> on the desktop.
+> **`docs/LAPTOP-NOW.md` only**. After 2026-08-31, **LAPTOP-GO** is the Techstream
+> job; LAPTOP-NOW is OpenMVCI-only if he still wants that.
 >
 > 🪟 **Free Mini-VCI full plan (USB, stay on WiFi, no TIS yet)?**
 > **`docs/FREE-MINIVCI.md`**. Do not invent a second plan.
