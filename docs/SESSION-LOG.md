@@ -5,6 +5,27 @@ the code, and what to do next. Keep it short and factual.
 
 ---
 
+## 2026-09-01 — Elvera laptop GO: pack + cable OK; V18 not installed
+
+**Machine:** Elvera’s HP ProBook 455 G10, Windows 11 Pro 26100, `DESKTOP-SM24JC8\Elvera`. Followed **`docs/LAPTOP-GO.md` only**. No car.
+
+**Done (desk prep):**
+- Restore point 4: `Before Techstream V18 laptop GO 2026-09-01`.
+- Defender exclusions (real-time still on): `...\Techstream`, `...\XHorse Electronics`, `C:\Users\Elvera\prado-techstream`.
+- VC++ 2015–2022 x86 and .NET 4.8 already present.
+- Ventoy `D:\prado-techstream\` hashed; all five SHA256 match the 2026-08-31 table. Copied to `C:\Users\Elvera\prado-techstream`.
+- Mini-VCI **COM3 OK**, `VID_0403/PID_6001`, serial **`A6VON31I`**. XHorse folder + J2534 **XHorse - MVCI** already registered. No leftover Techstream.
+
+**Not done (Phase A still open):**
+- FirmwareUpdateTool process ran with no window. Device Info **not** confirmed on this laptop (cable was 1.4.1 on PierrePC 2026-08-31; never flashed). Desktop launcher: `MiniVCI-DeviceInfo.bat` / `.lnk` — Device Info only, never Update.
+- V18 InstallShield wizard reached **Choose Setup Language**; session wrapped before Finish. `C:\Program Files (x86)\Toyota Diagnostics\Techstream` **does not exist**. No `TS_loader`, no Connect test.
+
+**Next (same file, still desk):** Device Info → Connected / 1.4.1. Then V18 English → Next → accept → Install → **uncheck Launch** → Finish. Copy `TS_loader.exe` + `TSRegistration.exe` into `bin`, `TISFunction=0`, shortcut to **TS_loader**. Connect must be vehicle-select or comm-fail, **not** S314-02. Stay offline for first Connect. **Do not go to the car.**
+
+**Do not:** flash, Zadig, mini-CD, 48h TIS, dummy keys, mix binaries, format Ventoy, install Techstream on PierrePC.
+
+---
+
 ## 2026-08-31 — Stop Techstream on PierrePC; laptop GO + USB pack
 
 **Decision:** do **not** install Techstream on the daily desktop. Tomorrow: Elvera’s HP ProBook 455 Windows. Pierre says **go**. Agent follows **`docs/LAPTOP-GO.md` only**.
