@@ -169,10 +169,19 @@ Discussed only these two. Full session write-up in `docs/SESSION-LOG.md`.
 - **Why yellow not red:** 120 Prado oil-**pressure** warning is the **red oil-can**. Amber after warm-up is most likely **A/T oil temp** (ATF cooler lives in that radiator) — confirm the symbol. Engine leak and this lamp may be separate.
 - Fuel for planning: ~6 L / 50 km × 116.25 MZN/L ≈ **700 MZN / 50 km**.
 
-## 2026-08-31 — Power loss after Inhambane; EDU connector cleaned
+## 2026-08-31 — Power loss after Inhambane; MAF plug on air box cleaned
 
 - ~1 week after return: down on power, CEL on. Felt like limp. **D weak; 2 and L still pulled.**
 - Then: ~30 s driving → almost no power in D/2/L. Park, pedal down, **~1500 rpm ceiling**. Last metres: **pushed**, pedal on the floor.
-- Mechanic: cleaned the connector on a **big black box, driver-side inner wing** (left of engine from the front) = **1KD EDU (injector driver)**, not the cabin ECU.
-- Consult: both fail-safe (ECU saw no injector confirmation, limited fuel, threw the pedal away) **and** the EDU barely firing injectors. Not gearbox, not turbo. 2/L “power” was a short gear hiding a limited engine. Push-home was past limp — almost no injection under load.
-- Fix is real if pins were only dirty. Recurs if the seal/pins are gone (dust, oil mist, humidity). Replace plug or EDU then, not more cleaner.
+- Mechanic: cleaned the wiring plug going into a **port on the big black air box**, driver-side (right) inner wing. Called it “air intake controller.”
+- **2026-09-04 correction:** Pierre confirmed that box is the **air cleaner**, not the EDU. The port + harness is the **MAF (air flow meter)** on the air-box housing. Mechanic’s name was closer than the first consult.
+- How it limps: ECU uses MAF for fuel, EGR and the diesel throttle (intake restrictor). Open/dirty MAF plug → airflow reads ~0 or garbage → CEL, fuel cut back, restrictor can close. Short gears (2/L) still hid a limited engine. Cleaning the plug is a real fix if pins were only filthy.
+- Mechanic also did a **battery reset** (Toyota: disconnect battery or EFI fuse). That is the workshop way to erase DTCs and drop fail-safe without a tester. Cleaning restores the MAF signal; reset tells the computer to use it again. Car running well after both is the expected result. Does **not** recode injectors. Aftermarket alarm may have needed a re-arm.
+- Recurs after dust, rain, or oil mist (turbo feed leak sits nearby). Then clean/replace the MAF plug or the sensor, not the EDU. EDU is a different small ribbed brick on the inner fender — not this episode.
+
+## 2026-09-04 — No pull below ~1500; kicks in above; can’t leave a 4x4 hill from stop
+
+- Different from the Aug-31 1500 **ceiling**. Now: dead at low revs, then it **arrives** past ~1500. Easy 4x4 hill from stationary: won’t go. Once revs are up, climbs easily.
+- First suspects on this 1KD: **VNT vanes not closing** (turbo May-21, stepper/driver, carbon) → no low-rpm boost. **EGR stuck open** at low load. **MAF plug** again (just cleaned). Uncoded injectors are background, not a sharp 1500 step.
+- **Park test (2026-09-04):** revs normal idle to the top. No hole, no sudden kick. So not a limiter / MAF cut / stuck throttle. Fault only under load. VNT lag and EGR still fit; MAF much less likely.
+- **Launch (same day):** on the hill, engine **revs, car does not move**, however long the pedal is down. **Slightest momentum** then climbs with no problem. High-rpm **black** smoke. Mechanic said rings due — **wrong colour**: black is fuel, not oil. This is stall/launch (converter / ATF / no stall torque), not a ring job. Flooring from rest cooks the box (yellow A/T temp light already in the file since the Jun radiator job). Check ATF level/colour next.

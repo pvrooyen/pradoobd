@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#102A43" />
+    <meta name="description" content="2005 Toyota Land Cruiser Prado 120 TX — Tofinho / Tofo, Inhambane." />
+    <title>À venda · 2005 Toyota Prado 120 · Tofo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #f4f1ea;
+        --paper: #fffcf7;
+        --navy: #102a43;
+        --blue: #1e4b9e;
+        --muted: #5b6b7c;
+        --line: #d9d3c7;
+        --warn-bg: #fbf3e4;
+        --radius: 14px;
+        --shadow: 0 14px 32px rgba(16, 42, 67, 0.12);
+        --dock: 0px;
+      }
+
+      * { box-sizing: border-box; }
+      html { color-scheme: light; }
+      html, body { margin: 0; height: 100%; }
+      body {
+        font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+        background: var(--cream);
+        color: var(--navy);
+        line-height: 1.4;
+        display: flex;
+        flex-direction: column;
+      }
+
+      img { max-width: 100%; display: block; }
+      button, a { font-family: inherit; }
+      :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+      .skip {
+        position: absolute;
+        left: -999px;
+        top: 8px;
+        background: var(--navy);
+        color: #fff;
+        padding: 8px 12px;
+        z-index: 50;
+      }
+      .skip:focus { left: 8px; }
+
+      .wrap {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0 10px calc(10px + var(--dock) + env(safe-area-inset-bottom));
+      }
+
+      header.top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0 8px;
+        flex-shrink: 0;
+      }
+      .topline { min-width: 0; flex: 1; }
+      .kicker {
+        font-family: "Barlow Condensed", sans-serif;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--blue);
+        padding: 5px 9px;
+        border-radius: 6px;
+        flex-shrink: 0;
+      }
+      .topline h1 {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: clamp(20px, 2.4vw, 30px);
+        font-weight: 800;
+        margin: 0;
+        line-height: 1;
+      }
+      .topline p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+      .lang {
+        display: inline-flex;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+        background: var(--paper);
+        flex-shrink: 0;
+      }
+      .lang button {
+        border: 0;
+        background: transparent;
+        padding: 7px 12px;
+        min-height: 36px;
+        cursor: pointer;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .lang button[aria-pressed="true"] {
+        background: var(--navy);
+        color: #fff;
+      }
+
+      /* Desktop: one screen. Flyer height drives the row; right column matches top+bottom. */
+      .page {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: stretch;
+        gap: 14px;
+      }
+
+      .poster {
+        margin: 0;
+        flex: 0 1 auto;
+        height: 100%;
+        min-width: 0;
+        display: flex;
+      }
+      .poster img {
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        display: block;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        background: var(--paper);
+      }
+
+      .right {
+        flex: 1 1 0;
+        min-width: 280px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .gallery {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .stage {
+        position: relative;
+        flex: 1 1 0;
+        min-height: 0;
+        background: #111;
+      }
+      .stage-open {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: #111;
+        cursor: zoom-in;
+      }
+      .stage-open img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .zoom-hint {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        z-index: 2;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(16, 42, 67, 0.78);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+      .nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--navy);
+        cursor: pointer;
+        font-size: 22px;
+        z-index: 2;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+      }
+      .nav-btn.prev { left: 10px; }
+      .nav-btn.next { right: 10px; }
+      .count {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        z-index: 2;
+        background: rgba(16, 42, 67, 0.78);
+        color: #fff;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 999px;
+      }
+      .caption {
+        margin: 0;
+        padding: 6px 12px 0;
+        color: var(--muted);
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+      .thumbs {
+        display: grid;
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+        gap: 5px;
+        padding: 8px 10px 10px;
+        flex-shrink: 0;
+      }
+      .thumbs button {
+        border: 2px solid transparent;
+        padding: 0;
+        border-radius: 7px;
+        overflow: hidden;
+        cursor: pointer;
+        background: #eee;
+        aspect-ratio: 4 / 3;
+      }
+      .thumbs button[aria-current="true"] { border-color: var(--blue); }
+      .thumbs img { width: 100%; height: 100%; object-fit: cover; }
+
+      .details {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 0;
+      }
+
+      .offer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 124px;
+        gap: 8px 12px;
+        background: var(--navy);
+        color: #fff;
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        align-items: center;
+      }
+      .ask, .asis { min-width: 0; }
+      .offer .label {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.72;
+        margin: 0 0 2px;
+      }
+      .offer .amount {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: clamp(24px, 2.6vw, 36px);
+        font-weight: 800;
+        margin: 0;
+        line-height: 1;
+      }
+      .offer .asis .amount { color: #f2d089; }
+      .contact {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        align-self: stretch;
+      }
+      .wa, .mail {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        font-weight: 700;
+        font-size: 13px;
+        text-decoration: none;
+        border-radius: 8px;
+        padding: 6px 10px;
+        min-height: 30px;
+        white-space: nowrap;
+      }
+      .wa { background: #25d366; color: #073b1e; }
+      .mail { background: #fff; color: var(--navy); }
+
+      .issues {
+        background: var(--warn-bg);
+        border: 1px solid #ead7b2;
+        border-left: 5px solid #c4881a;
+        border-radius: var(--radius);
+        padding: 10px 12px 6px;
+      }
+      .issues h2 {
+        font-family: "Barlow Condensed", sans-serif;
+        margin: 0 0 4px;
+        font-size: 18px;
+        letter-spacing: 0.03em;
+      }
+      .issues p, .issues li { color: #4a3a22; font-size: 13px; margin: 0 0 6px; }
+      .issue-cols {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 8px 18px;
+        align-items: start;
+      }
+      .issue-cols > div { min-width: 0; }
+      .issues h3 {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        margin: 0 0 4px;
+      }
+      .engine-head {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: baseline;
+        gap: 8px;
+        margin: 0 0 4px;
+        min-width: 0;
+        white-space: nowrap;
+      }
+      .engine-head h3 {
+        margin: 0;
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+      .engine-head p {
+        margin: 0;
+        flex: 1 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .issues ul { padding-left: 16px; margin: 0; }
+      .issues li { margin-bottom: 4px; }
+
+      .dock { display: none; }
+
+      body.lb-open { overflow: hidden; }
+
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 64px 84px 76px;
+        background: rgba(8, 14, 24, 0.94);
+      }
+      .lightbox[hidden] { display: none; }
+      .lb-figure {
+        margin: 0;
+        max-width: min(1120px, 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .lb-figure img {
+        max-width: 100%;
+        max-height: calc(100dvh - 180px);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #000;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+      }
+      .lb-figure figcaption {
+        margin: 0;
+        color: #fff;
+        font-size: 15px;
+        text-align: center;
+        background: rgba(8, 14, 24, 0.82);
+        padding: 4px 12px;
+        border-radius: 999px;
+      }
+      .lb-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 3;
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--navy);
+        font-size: 28px;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+      }
+      .lightbox .nav-btn { width: 52px; height: 52px; font-size: 28px; }
+      .lightbox .nav-btn.prev { left: 16px; }
+      .lightbox .nav-btn.next { right: 16px; }
+      .lb-count {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+        font-size: 13px;
+        padding: 4px 10px;
+        border-radius: 999px;
+      }
+
+      @media (max-width: 960px) {
+        html, body { height: auto; min-height: 100%; }
+        body { display: block; }
+        .wrap {
+          width: 100%;
+          margin: 0;
+          display: block;
+          padding-inline: 10px;
+        }
+        .page {
+          display: flex;
+          flex-direction: column;
+          height: auto;
+          padding-bottom: calc(var(--dock) + 24px);
+        }
+        .right {
+          flex: 0 0 auto;
+          height: auto;
+          min-height: 0;
+          min-width: 0;
+          order: 0;
+        }
+        .gallery {
+          flex: 0 0 auto;
+          overflow: visible;
+          height: auto;
+        }
+        .stage { flex: none; aspect-ratio: 3 / 2; height: auto; }
+        .poster { height: auto; order: 1; width: 100%; flex: 0 0 auto; }
+        .poster img { height: auto; width: 100%; max-height: none; }
+        .thumbs {
+          display: flex;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .thumbs button { flex: 0 0 72px; }
+        .offer { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 96px; }
+        :root { --dock: 60px; }
+        .dock {
+          display: flex;
+          position: fixed;
+          left: 0; right: 0; bottom: 0;
+          padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+          background: rgba(244, 241, 234, 0.94);
+          border-top: 1px solid var(--line);
+          z-index: 20;
+        }
+        .dock .wa { flex: 1; width: auto; }
+        .lightbox { padding: 58px 12px 70px; }
+        .lb-figure { max-width: 100%; }
+        .lb-figure img { max-height: calc(100dvh - 160px); }
+        .lightbox .nav-btn.prev { left: 8px; }
+        .lightbox .nav-btn.next { right: 8px; }
+      }
+
+      @media (max-width: 560px) {
+        header.top {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: start;
+        }
+        .topline { grid-column: 1 / -1; }
+        .topline h1 { font-size: 22px; }
+        .offer {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 88px;
+          gap: 6px 8px;
+          padding: 8px;
+        }
+        .offer .label { font-size: 10px; letter-spacing: 0.04em; }
+        .offer .amount { font-size: 20px; }
+        .wa, .mail { font-size: 11px; padding: 5px 4px; min-height: 26px; }
+        .issue-cols { grid-template-columns: 1fr; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * { scroll-behavior: auto !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main" data-i18n="skip">Saltar para o conteúdo</a>
+    <div class="wrap">
+      <header class="top">
+        <span class="kicker" data-i18n="kicker">À venda</span>
+        <div class="topline">
+          <h1>2005 Toyota Land Cruiser Prado 120</h1>
+          <p data-i18n="place">Tofinho / Tofo · Inhambane · Moçambique · ACZ 676 MC</p>
+        </div>
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" id="btn-pt" aria-pressed="true">PT</button>
+          <button type="button" id="btn-en" aria-pressed="false">EN</button>
+        </div>
+      </header>
+
+      <main id="main" class="page">
+        <figure class="poster">
+          <img
+            src="photos/00-hero-poster.png"
+            alt="Cartaz: Toyota Prado 120 TX à venda, 675.000 MZN"
+            width="1024"
+            height="1536"
+          />
+        </figure>
+
+        <div class="right">
+          <div class="gallery">
+            <div class="stage" id="stage">
+              <button class="stage-open" type="button" id="stage-open" aria-haspopup="dialog">
+                <img id="slide" alt="" />
+              </button>
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" />
+                </svg>
+              </span>
+              <button class="nav-btn prev" type="button" id="prev" aria-label="Anterior">‹</button>
+              <button class="nav-btn next" type="button" id="next" aria-label="Seguinte">›</button>
+              <div class="count" id="count"></div>
+            </div>
+            <p class="caption" id="caption"></p>
+            <div class="thumbs" id="thumbs"></div>
+          </div>
+
+          <div class="details">
+            <section class="offer" aria-label="Price">
+              <div class="ask">
+                <p class="label" data-i18n="askLabel">Preço pedido</p>
+                <p class="amount">750.000 MZN</p>
+              </div>
+              <div class="asis">
+                <p class="label" data-i18n="asisLabel">Desconto devido aos problemas abaixo</p>
+                <p class="amount">675.000 MZN</p>
+              </div>
+              <div class="contact">
+                <a class="wa" id="wa" href="https://wa.me/27849781078" target="_blank" rel="noopener">
+                  WhatsApp
+                </a>
+                <a class="mail" href="mailto:pvrooyen@gmail.com">Email</a>
+              </div>
+            </section>
+
+            <section class="issues" aria-labelledby="issues-title">
+              <h2 id="issues-title" data-i18n="issuesTitle">Problemas actuais — o 675.000 MZN já os inclui</h2>
+              <div class="issue-cols">
+                <div>
+                  <div class="engine-head">
+                    <h3 data-i18n="engineTitle">Motor</h3>
+                    <p data-i18n="engineLead" title="Recon. motor/anéis necessários (ver orçamento nas fotos)">
+                      Recon. motor/anéis necessários (ver orçamento nas fotos)
+                    </p>
+                  </div>
+                  <ul>
+                    <li data-i18n="issuePower">
+                      Em baixa rotação / em carga não puxa. Em subida, a partir de parado, pode não sair até as rotações subirem. Luz de avaria no painel.
+                    </li>
+                    <li data-i18n="issueRings">Fumo excessivo no escape a altas rotações.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 data-i18n="otherTitle">Outros</h3>
+                  <ul>
+                    <li data-i18n="otherCosmetic">Alguma cosmética no interior</li>
+                    <li data-i18n="otherSuspension">Alguma suspensão dianteira, incluindo amortecedores</li>
+                    <li data-i18n="otherSeats">Cinco lugares montados; dois extra podem montar-se atrás</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="dock">
+      <a class="wa" id="wa-dock" href="https://wa.me/27849781078" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+
+    <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-labelledby="lb-cap">
+      <button class="lb-close" type="button" id="lb-close" aria-label="Fechar">×</button>
+      <button class="nav-btn prev" type="button" id="lb-prev" aria-label="Anterior">‹</button>
+      <figure class="lb-figure">
+        <img id="lb-img" alt="" />
+        <figcaption id="lb-cap"></figcaption>
+      </figure>
+      <button class="nav-btn next" type="button" id="lb-next" aria-label="Seguinte">›</button>
+      <div class="lb-count" id="lb-count"></div>
+    </div>
+
+    <script>
+      const PHOTOS = [
+        { src: "photos/01-front.jpg", pt: "Frente, três quartos", en: "Front three-quarter" },
+        { src: "photos/02-side-driver.jpg", pt: "Lado", en: "Side" },
+        { src: "photos/03-rear.jpg", pt: "Traseira", en: "Back" },
+        { src: "photos/04-side-passenger.jpg", pt: "Outro lado", en: "Other side" },
+        { src: "photos/05-cabin.jpg", pt: "Habitáculo, três filas", en: "Cabin, three rows" },
+        { src: "photos/06-driver.jpg", pt: "Lugar do condutor", en: "Driver’s seat" },
+        { src: "photos/07-odometer.jpg", pt: "Conta-quilómetros 256.405 km", en: "Odometer 256,405 km" },
+        { src: "photos/08-engine.jpg", pt: "Motor 1KD-FTV", en: "1KD-FTV engine bay" },
+        { src: "photos/09-quote.jpg", pt: "Orçamento Auto Mario — 26.850 MZN", en: "Auto Mario quote — 26,850 MZN" },
+      ];
+
+      const I18N = {
+        pt: {
+          skip: "Saltar para o conteúdo",
+          kicker: "À venda",
+          place: "Tofinho / Tofo · Inhambane · Moçambique · ACZ 676 MC",
+          title: "À venda · 2005 Toyota Prado 120 · Tofo",
+          askLabel: "Preço pedido",
+          asisLabel: "Desconto devido aos problemas abaixo",
+          issuesTitle: "Problemas actuais — o 675.000 MZN já os inclui",
+          engineTitle: "Motor",
+          engineLead: "Recon. motor/anéis necessários (ver orçamento nas fotos)",
+          issuePower:
+            "Em baixa rotação / em carga não puxa. Em subida, a partir de parado, pode não sair até as rotações subirem. Luz de avaria no painel.",
+          issueRings: "Fumo excessivo no escape a altas rotações.",
+          otherTitle: "Outros",
+          otherCosmetic: "Alguma cosmética no interior",
+          otherSuspension: "Alguma suspensão dianteira, incluindo amortecedores",
+          otherSeats: "Cinco lugares montados; dois extra podem montar-se atrás",
+          waMsg: "Olá, vi o Prado 2005 à venda (ACZ 676 MC). Ainda está disponível?",
+          posterAlt: "Cartaz: Toyota Prado 120 TX à venda, 675.000 MZN",
+          prev: "Anterior",
+          next: "Seguinte",
+          close: "Fechar",
+          enlarge: "Ampliar foto",
+        },
+        en: {
+          skip: "Skip to content",
+          kicker: "For sale",
+          place: "Tofinho / Tofo · Inhambane · Mozambique · ACZ 676 MC",
+          title: "For sale · 2005 Toyota Prado 120 · Tofo",
+          askLabel: "Asking price",
+          asisLabel: "Discounted due to issues listed below",
+          issuesTitle: "Current issues — 675,000 MZN already includes them",
+          engineTitle: "Engine",
+          engineLead: "Engine recon/rings replace needed (see quote in fotos)",
+          issuePower:
+            "At low rpm / under load it does not pull. On a hill from a standstill it can refuse to move until revs come up. Check-engine light is on.",
+          issueRings: "Excessive smoke from exhaust at high revs.",
+          otherTitle: "Other",
+          otherCosmetic: "Some interior cosmetic",
+          otherSuspension: "Some front suspension including shocks",
+          otherSeats: "Five seats fitted; two extra can be mounted in the back",
+          waMsg: "Hi, I saw the 2005 Prado for sale (ACZ 676 MC). Is it still available?",
+          posterAlt: "Flyer: Toyota Prado 120 TX for sale, 675,000 MZN",
+          prev: "Previous",
+          next: "Next",
+          close: "Close",
+          enlarge: "Enlarge photo",
+        },
+      };
+
+      const detectLang = () => {
+        const saved = localStorage.getItem("prado-lang");
+        if (saved === "pt" || saved === "en") return saved;
+        const nav = (navigator.language || "en").toLowerCase();
+        return nav.startsWith("pt") ? "pt" : "en";
+      };
+
+      let lang = detectLang();
+      let index = 0;
+      const slide = document.getElementById("slide");
+      const stageOpen = document.getElementById("stage-open");
+      const caption = document.getElementById("caption");
+      const count = document.getElementById("count");
+      const thumbs = document.getElementById("thumbs");
+      const wa = document.getElementById("wa");
+      const waDock = document.getElementById("wa-dock");
+      const lightbox = document.getElementById("lightbox");
+      const lbImg = document.getElementById("lb-img");
+      const lbCap = document.getElementById("lb-cap");
+      const lbCount = document.getElementById("lb-count");
+      const lbClose = document.getElementById("lb-close");
+      const lbPrev = document.getElementById("lb-prev");
+      const lbNext = document.getElementById("lb-next");
+      const pageWrap = document.querySelector(".wrap");
+      const dock = document.querySelector(".dock");
+
+      function waHref() {
+        return `https://wa.me/27849781078?text=${encodeURIComponent(I18N[lang].waMsg)}`;
+      }
+
+      function applyLang() {
+        document.documentElement.lang = lang;
+        document.title = I18N[lang].title;
+        document.getElementById("btn-pt").setAttribute("aria-pressed", String(lang === "pt"));
+        document.getElementById("btn-en").setAttribute("aria-pressed", String(lang === "en"));
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const val = I18N[lang][el.getAttribute("data-i18n")];
+          if (val == null) return;
+          if (val.includes("<")) el.innerHTML = val;
+          else el.textContent = val;
+          if (el.getAttribute("data-i18n") === "engineLead") el.title = val;
+        });
+        document.querySelector(".poster img").alt = I18N[lang].posterAlt;
+        const t = I18N[lang];
+        document.getElementById("prev").setAttribute("aria-label", t.prev);
+        document.getElementById("next").setAttribute("aria-label", t.next);
+        lbPrev.setAttribute("aria-label", t.prev);
+        lbNext.setAttribute("aria-label", t.next);
+        lbClose.setAttribute("aria-label", t.close);
+        wa.href = waHref();
+        waDock.href = waHref();
+        renderSlide();
+        renderThumbs();
+      }
+
+      function lightboxOpen() {
+        return !lightbox.hidden;
+      }
+
+      function renderLightbox() {
+        const p = PHOTOS[index];
+        lbImg.src = p.src;
+        lbImg.alt = p[lang];
+        lbCap.textContent = p[lang];
+        lbCount.textContent = `${index + 1} / ${PHOTOS.length}`;
+      }
+
+      function openLightbox() {
+        renderLightbox();
+        lightbox.hidden = false;
+        document.body.classList.add("lb-open");
+        pageWrap.inert = true;
+        dock.inert = true;
+        lbClose.focus();
+      }
+
+      function closeLightbox() {
+        lightbox.hidden = true;
+        document.body.classList.remove("lb-open");
+        pageWrap.inert = false;
+        dock.inert = false;
+        stageOpen.focus();
+      }
+
+      function renderSlide() {
+        const p = PHOTOS[index];
+        slide.src = p.src;
+        slide.alt = p[lang];
+        stageOpen.setAttribute("aria-label", `${I18N[lang].enlarge}: ${p[lang]}`);
+        caption.textContent = p[lang];
+        count.textContent = `${index + 1} / ${PHOTOS.length}`;
+        if (lightboxOpen()) renderLightbox();
+        thumbs.querySelectorAll("button").forEach((b, i) => {
+          b.setAttribute("aria-current", i === index ? "true" : "false");
+        });
+      }
+
+      function renderThumbs() {
+        thumbs.replaceChildren(
+          ...PHOTOS.map((p, i) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.setAttribute("aria-label", p[lang]);
+            b.setAttribute("aria-current", i === index ? "true" : "false");
+            const img = document.createElement("img");
+            img.src = p.src;
+            img.alt = "";
+            img.loading = "lazy";
+            b.append(img);
+            b.addEventListener("click", () => {
+              index = i;
+              renderSlide();
+            });
+            return b;
+          }),
+        );
+      }
+
+      function go(delta) {
+        index = (index + delta + PHOTOS.length) % PHOTOS.length;
+        renderSlide();
+      }
+
+      document.getElementById("prev").addEventListener("click", () => go(-1));
+      document.getElementById("next").addEventListener("click", () => go(1));
+      lbPrev.addEventListener("click", () => go(-1));
+      lbNext.addEventListener("click", () => go(1));
+      lbClose.addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      let swipeStartX = 0;
+      let swipeMoved = false;
+      stageOpen.addEventListener("pointerdown", (e) => {
+        swipeStartX = e.clientX;
+        swipeMoved = false;
+      });
+      stageOpen.addEventListener("pointermove", (e) => {
+        if (Math.abs(e.clientX - swipeStartX) > 16) swipeMoved = true;
+      });
+      stageOpen.addEventListener("click", () => {
+        if (swipeMoved) {
+          swipeMoved = false;
+          return;
+        }
+        openLightbox();
+      });
+      document.getElementById("btn-pt").addEventListener("click", () => {
+        lang = "pt";
+        localStorage.setItem("prado-lang", "pt");
+        applyLang();
+      });
+      document.getElementById("btn-en").addEventListener("click", () => {
+        lang = "en";
+        localStorage.setItem("prado-lang", "en");
+        applyLang();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (lightboxOpen()) {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            closeLightbox();
+            return;
+          }
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            go(-1);
+            return;
+          }
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            go(1);
+            return;
+          }
+          if (e.key === "Tab") {
+            const items = [lbClose, lbPrev, lbNext];
+            const first = items[0];
+            const last = items[items.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+          return;
+        }
+        if (e.key === "ArrowLeft") go(-1);
+        if (e.key === "ArrowRight") go(1);
+      });
+
+      const stage = document.getElementById("stage");
+      let startX = 0;
+      stage.addEventListener("touchstart", (e) => { startX = e.changedTouches[0].clientX; }, { passive: true });
+      stage.addEventListener("touchend", (e) => {
+        if (lightboxOpen()) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) > 16) swipeMoved = true;
+        if (dx > 40) go(-1);
+        if (dx < -40) go(1);
+      }, { passive: true });
+
+      let lbStartX = 0;
+      lightbox.addEventListener("touchstart", (e) => { lbStartX = e.changedTouches[0].clientX; }, { passive: true });
+      lightbox.addEventListener("touchend", (e) => {
+        const dx = e.changedTouches[0].clientX - lbStartX;
+        if (dx > 40) go(-1);
+        if (dx < -40) go(1);
+      }, { passive: true });
+
+      applyLang();
+    </script>
+  </body>
+</html>

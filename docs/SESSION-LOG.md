@@ -69,19 +69,29 @@ Copied into `C:\Program Files (x86)\Toyota Diagnostics\Techstream\bin\`. Desktop
 
 ---
 
+## 2026-09-04 — Low-rpm hole: no pull until ~1500, then it kicks
+
+New/noticed yesterday. Not the Aug-31 ceiling. Park revs normal. On a hill from rest: **engine revs, car does not move** no matter how long the pedal is down; **slightest roll** then climbs fine. High-rpm **black** smoke. Mechanic blamed rings — black is fuel, not oil. Pattern is launch (converter/ATF or no stall torque), not rings. Don’t stall-floor it. Check ATF.
+
+---
+
+## 2026-09-04 — Power-loss box identified: MAF on air box, not EDU
+
+Pierre matched the inner-wing box to the **air cleaner**. Wires into a port on that box = **MAF (air flow meter)**. Mechanic’s “air intake controller” was that plug. First consult called it EDU — wrong box. Symptoms still fit a dead MAF signal (fuel cut + diesel throttle closing). EDU is the small ribbed brick, different part. Vehicle file updated.
+
+---
+
 ## 2026-08-31 — Power-loss consult (car talk only; no OBD)
 
-**Scope:** driveability after the Inhambane return. Pierre thought protected mode; 2 and L still had pull, D did not. Then almost no power after ~30 s in any gear; in Park the pedal would not take it past ~1500 rpm. Last metres home: pushed, pedal on the floor. Mechanic cleaned a connector on a big black box, driver-side inner wing (left of the engine viewed from the front).
+**Scope:** driveability after the Inhambane return. Pierre thought protected mode; 2 and L still had pull, D did not. Then almost no power after ~30 s in any gear; in Park the pedal would not take it past ~1500 rpm. Last metres home: pushed, pedal on the floor. Mechanic cleaned a connector on a big black box, driver-side inner wing.
 
-**Verdict:** fail-safe **and** the injectors barely being driven. Not the gearbox, not the turbo, not the accelerator pedal.
+**Verdict (corrected 2026-09-04):** the box is the **air cleaner**. The plug is the **MAF**. Dirty/open MAF → ECU sees no/wrong airflow → CEL, fuel pulled, intake restrictor can shut. 2/L still moved it because a short gear hid a limited engine. Cleaning that plug is a valid fix. Recurs with dust, rain, oil mist. Then MAF plug/sensor, not EDU.
 
-That box is the **EDU (injector driver)**. Cabin ECU only *asks*; the EDU fires the injectors and must confirm. A dirty plug both starves the drive and makes the ECU think the injectors have failed, so it enters fail-safe (CEL, ~1500 rpm wall, pedal ignored). Last week 2/L still moved it because a short gear hid the limited engine. At the end the plug was so bad there was almost no injection under load — idle in Park still ran (sip of fuel); moving the car needed a gulp that was not there. Fail-safe is meant to limp you home; this went past that.
-
-Cleaning is a valid fix. It will come back if the seal is torn or the pins are green — then replace the plug or the EDU, not another spray. Watch it after rain or a dusty run.
+First write-up named the **EDU**. That was a mis-ID from “black box on the inner wing.” EDU is a small ribbed electronics module with one fat plug, not the plastic air box.
 
 No code changes. Not the Mini-VCI / Techstream track.
 
-**Next:** none on this topic unless the limp returns.
+**Next:** none on this topic unless the limp returns. Then scan for MAF codes (P0100 / P0101 / P0102) first.
 
 ---
 

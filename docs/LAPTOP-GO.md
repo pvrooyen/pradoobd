@@ -55,7 +55,7 @@ You run `git`, `Copy-Item`, Defender exclusions, `reg import`, hashes, process s
 | Product he bought | Takealot cable + TIS Techstream (PLID93817397). He got a **CD** and **no CD reader**. Official 48h TIS is a **different** product (Mongoose). Do not buy it. |
 | Why “people buy this every day” still failed | The CD / 2021 ISO “Patch 64bit.lnk” is a **fake shortcut** to `Techstream.exe /395070/VM:1`. Working 2025–2026 Mini-VCI installs use **stock Techstream V18.00.008** plus a real **`TS_loader.exe` + `TSRegistration.exe`** from the same pack. Dummy `1111…5000…` keys open the shell; **Connect still wants TBR** and shows **S314-02**. |
 | PierrePC 2026-08-31 | Cable + Device Info + J2534 VIM **proven**. V16 dummy key **rejected**. V12 Connect **S314-02**. xwolf `TS_loader` v0.1 on V12: **RUN no key grey** (already launched), Connect **same empty warning**. V12 then **uninstalled**. V18 installer started, Pierre said **stop — laptop only**. Leftover: `C:\Program Files (x86)\Toyota Diagnostics\Techstream.bak-v12-20260831160033`. |
-| EDU | 2026-08-31 limp: mechanic cleaned **EDU (injector driver)** plug, driver-side inner wing. Health Check later should record EDU / injector DTCs. Not today’s desk blocker. |
+| MAF | 2026-08-31 limp: mechanic cleaned **MAF plug on the air box**, driver-side inner wing. Health Check later should record MAF (P0100/P0101/P0102) if it returns. EDU is a different box. Not today’s desk blocker. |
 
 ---
 
@@ -219,7 +219,7 @@ Connect to Vehicle → if VIN fails, pick Prado / 2005 / 1KD-FTV manually.
 
 Then:
 
-1. **Health Check** — record every DTC. EDU / injector / immobiliser matter after the 2026-08-31 limp.
+1. **Health Check** — record every DTC. MAF / injector / immobiliser matter after the 2026-08-31 limp. EDU only if that module’s codes appear.
 2. Fans: Engine and A/C ECU Data List, then **Active Test** only after you agree a write is needed (mains power, stable USB).
 3. Injectors: Engine → Utility → **Injector Compensation** (#1 front) → then Utility → **Pilot Quantity Learning** (engine warm). Blocker: four **30-character** Denso IDs on the injectors. Do not invent codes.
 
@@ -268,6 +268,6 @@ In order. Do not invent a fourth plan.
 - `docs/TECHSTREAM-SANDBOX-VETTING.md` — Defender / VT rubric.
 - `docs/WINDOWS-LAPTOP-START-HERE.md` — older laptop checklist; **this file wins** on recipe (V18 + TS_loader, not V12 dummy keys).
 - `docs/DESKTOP-GO.md` — PierrePC only. Do not install Techstream there again.
-- `docs/vehicle/notes.md` — EDU connector 2026-08-31, injectors uncoded, fans.
+- `docs/vehicle/notes.md` — MAF plug on air box 2026-08-31, injectors uncoded, fans.
 
 OpenMVCI `dtc_reader` on this laptop is **optional**. Techstream is the job. If you have CMake/MSVC and want a second opinion after Phase A, `--open-only` then `--read` with `MVCI_SERIAL_BAUD=115200` and `MVCI_SERIAL_CTRL_MODE=none`. Do not spend the session fixing K-line framing if Techstream already talks.
